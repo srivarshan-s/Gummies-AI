@@ -93,6 +93,7 @@ linux/.pub/
 *.out
 *.sublime-workspace
 *.sublime-project
+news-api/target
 
 # File to store environment variables
 .env
