@@ -93,3 +93,6 @@ linux/.pub/
 *.out
 *.sublime-workspace
 *.sublime-project
+
+# File to store environment variables
+.env
