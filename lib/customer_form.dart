@@ -402,7 +402,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             ElevatedButton(
               onPressed: () {
                 setState(() {
-                  _currentStep = 1;
+                  _currentStep = 0;
                 });
               },
               style: ElevatedButton.styleFrom(
@@ -417,7 +417,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              child: Text('Next'),
+              child: Text('Back'),
             ),
             SizedBox(width: 20),
             ElevatedButton(
@@ -440,7 +440,6 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             ),
           ],
         ),
-
       ],
     );
   }
