@@ -10,6 +10,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isPasswordVisible = false;
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
@@ -86,6 +87,13 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide(color: Colors.white60),
                       ),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                      child : Icon(
+                        Icons.person,
+                        color: Color.fromRGBO(182,109,164,1),
+                      ),
+                  ),
                     ),
                     style: TextStyle(color: Colors.white),
                     validator: _validateEmail,
@@ -109,9 +117,30 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide(color: Colors.white60),
                       ),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child : Icon(
+                        Icons.lock,
+                        color: Color.fromRGBO(182,109,164,1),
+                      ),
+                      ),
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 8.0, 15.0, 8.0),
+                        child: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            color: Color.fromRGBO(182,109,164,1),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
                     ),
                     style: TextStyle(color: Colors.white),
-                    obscureText: true,
+                    obscureText: !_isPasswordVisible,
                     validator: _validatePassword,
                   ),
                   SizedBox(height: 20),
@@ -123,7 +152,9 @@ class _LoginPageState extends State<LoginPage> {
                       _isHoveringSubmit = false;
                     }),
                     child: ElevatedButton(
-                      onPressed: _submit,
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/customer_form'); // Navigate to Sign Up Page
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                         backgroundColor: _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),

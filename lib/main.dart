@@ -3,6 +3,7 @@ import 'choice.dart';  // Import the choice.dart file
 import 'login.dart';  // Import the login.dart.file
 import 'customer_signup.dart';
 import 'startup_signup.dart';
+import 'customer_form.dart';
 
 
 void main() => runApp(MyApp());
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginPage(),
         '/customer_signup': (context) => CustomerSignupPage(),
         '/startup_signup': (context) => StartupSignupPage(),
+        '/customer_form': (context) => CustomerFormPage(),
       },
     );
   }

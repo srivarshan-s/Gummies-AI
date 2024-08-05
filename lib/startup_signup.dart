@@ -12,6 +12,7 @@ class _StartupSignupPageState extends State<StartupSignupPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isPasswordVisible = false;
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
@@ -150,6 +151,20 @@ class _StartupSignupPageState extends State<StartupSignupPage> {
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide(color: Colors.white60),
                       ),
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 8.0, 15.0, 8.0),
+                        child: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            color: Color.fromRGBO(182,109,164,1),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
                     ),
                     style: TextStyle(color: Colors.white),
                     obscureText: true,
@@ -173,6 +188,20 @@ class _StartupSignupPageState extends State<StartupSignupPage> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide(color: Colors.white60),
+                      ),
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 8.0, 15.0, 8.0),
+                        child: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                            color: Color.fromRGBO(182,109,164,1),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
                       ),
                     ),
                     style: TextStyle(color: Colors.white),
