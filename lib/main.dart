@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'choice.dart';  // Import the choice.dart file
-import 'login.dart';  // Import the login.dart.file
+import 'package:firebase_core/firebase_core.dart';
+import 'choice.dart'; // Import the choice.dart file
+import 'login.dart'; // Import the login.dart.file
 import 'customer_signup.dart';
 import 'startup_signup.dart';
 import 'customer_form.dart';
 
-
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -51,7 +55,11 @@ class _WelcomePageState extends State<WelcomePage> {
             children: [
               ShaderMask(
                 shaderCallback: (bounds) => LinearGradient(
-                  colors: [Colors.blue, Color.fromRGBO(182,109,164,1), Color.fromRGBO(217, 100, 112, 1)],
+                  colors: [
+                    Colors.blue,
+                    Color.fromRGBO(182, 109, 164, 1),
+                    Color.fromRGBO(217, 100, 112, 1)
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ).createShader(bounds),
@@ -67,7 +75,11 @@ class _WelcomePageState extends State<WelcomePage> {
               ),
               ShaderMask(
                 shaderCallback: (bounds) => LinearGradient(
-                  colors: [Colors.blue, Color.fromRGBO(182,109,164,1), Color.fromRGBO(217, 100, 112, 1)],
+                  colors: [
+                    Colors.blue,
+                    Color.fromRGBO(182, 109, 164, 1),
+                    Color.fromRGBO(217, 100, 112, 1)
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ).createShader(bounds),
@@ -91,11 +103,13 @@ class _WelcomePageState extends State<WelcomePage> {
                 }),
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/login'); // Navigate to ChoicePage
+                    Navigator.pushNamed(
+                        context, '/login'); // Navigate to ChoicePage
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    backgroundColor: _isHoveringLogin ? Colors.blue : Color(0xFF1e1f20),
+                    backgroundColor:
+                        _isHoveringLogin ? Colors.blue : Color(0xFF1e1f20),
                     foregroundColor: Colors.white,
                     textStyle: TextStyle(
                       fontSize: 24,
@@ -118,11 +132,13 @@ class _WelcomePageState extends State<WelcomePage> {
                 }),
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/choice'); // Navigate to Sign Up Page
+                    Navigator.pushNamed(
+                        context, '/choice'); // Navigate to Sign Up Page
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    backgroundColor: _isHoveringSignup ? Colors.pink : Color(0xFF1e1f20),
+                    backgroundColor:
+                        _isHoveringSignup ? Colors.pink : Color(0xFF1e1f20),
                     foregroundColor: Colors.white,
                     textStyle: TextStyle(
                       fontSize: 24,
