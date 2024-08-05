@@ -69,6 +69,8 @@ flutter:
     - assets/signup_startup.png
     - assets/startup_circle.png
     - assets/customer_circle.png
+    - assets/cust_form1.png
+    - assets/cust_form2.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
