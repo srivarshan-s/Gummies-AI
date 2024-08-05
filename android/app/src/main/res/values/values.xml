@@ -1,0 +1,10 @@
+<resources>
+    <string name="default_web_client_id" translatable="false">622712536086-4rptrjucg0qt32o1icag21pio35frfcf.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">622712536086</string>
+    <string name="google_api_key" translatable="false">AIzaSyBhU4hLfHoTwxM-a8iPkVxuUfX1Nbk_Tb4</string>
+    <string name="google_app_id" translatable="false">1:622712536086:android:a2ce5613c0519142590937</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBhU4hLfHoTwxM-a8iPkVxuUfX1Nbk_Tb4</string>
+    <string name="project_id" translatable="false">gummies-53f97</string>
+    <string name="firebase_database_url" translatable="false">https://gummies-53f97.firebaseio.com</string>
+    <string name="google_storage_bucket" translatable="false">gummies-53f97.appspot.com</string>
+</resources>

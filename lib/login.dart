@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -11,8 +12,9 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
+  final _auth = FirebaseAuth.instance;
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
       // Handle login with valid inputs
       String email = _emailController.text;
@@ -23,10 +25,21 @@ class _LoginPageState extends State<LoginPage> {
       print('Email: $email');
       print('Password: $password');
 
-      // Simulate successful login
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login successful')),
-      );
+      _formKey.currentState!.save();
+      try {
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        // Navigate to home screen or show success message
+        print('Login successful: ${userCredential.user}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful')),
+        );
+      } on FirebaseAuthException catch (e) {
+        // Handle error
+        print('Login failed: $e');
+      }
     }
   }
 
@@ -67,7 +80,8 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/login_image.png', height: 450), // Add an image in your assets
+                  Image.asset('assets/login_image.png',
+                      height: 450), // Add an image in your assets
                   SizedBox(height: 20),
                   TextFormField(
                     controller: _emailController,
@@ -81,7 +95,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(color: Color.fromRGBO(182,109,164,1)),
+                        borderSide:
+                            BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -89,11 +104,11 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       prefixIcon: Padding(
                         padding: const EdgeInsets.all(20.0),
-                      child : Icon(
-                        Icons.person,
-                        color: Color.fromRGBO(182,109,164,1),
+                        child: Icon(
+                          Icons.person,
+                          color: Color.fromRGBO(182, 109, 164, 1),
+                        ),
                       ),
-                  ),
                     ),
                     style: TextStyle(color: Colors.white),
                     validator: _validateEmail,
@@ -111,7 +126,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(color: Color.fromRGBO(182,109,164,1)),
+                        borderSide:
+                            BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
@@ -119,17 +135,19 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       prefixIcon: Padding(
                         padding: const EdgeInsets.all(20.0),
-                        child : Icon(
-                        Icons.lock,
-                        color: Color.fromRGBO(182,109,164,1),
-                      ),
+                        child: Icon(
+                          Icons.lock,
+                          color: Color.fromRGBO(182, 109, 164, 1),
+                        ),
                       ),
                       suffixIcon: Padding(
                         padding: const EdgeInsets.fromLTRB(0, 8.0, 15.0, 8.0),
                         child: IconButton(
                           icon: Icon(
-                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                            color: Color.fromRGBO(182,109,164,1),
+                            _isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Color.fromRGBO(182, 109, 164, 1),
                           ),
                           onPressed: () {
                             setState(() {
@@ -153,11 +171,14 @@ class _LoginPageState extends State<LoginPage> {
                     }),
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/customer_form'); // Navigate to Sign Up Page
+                        Navigator.pushNamed(context,
+                            '/customer_form'); // Navigate to Sign Up Page
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                        backgroundColor: _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        backgroundColor:
+                            _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
                         foregroundColor: Colors.white,
                         textStyle: TextStyle(
                           fontSize: 18,
@@ -177,7 +198,7 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     child: Text(
                       "Don't have an account? Sign up",
-                      style: TextStyle(color: Color.fromRGBO(182,109,164,1)),
+                      style: TextStyle(color: Color.fromRGBO(182, 109, 164, 1)),
                     ),
                   ),
                 ],
