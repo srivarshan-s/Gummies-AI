@@ -9,6 +9,7 @@ class CustomerFormPage extends StatefulWidget {
 class _CustomerFormPageState extends State<CustomerFormPage> {
   int _riskLevel = 1;
   List<String> _selectedDomains = [];
+  List<String> _selectedCompanies = [];
 
   final List<String> _businessDomains = [
     'Accounting and Finance',
@@ -36,6 +37,24 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     'Research and Development',
     'Government and Public Administration',
     'Sports and Recreation',
+  ];
+
+  final List<String> _companies = [
+    'Google',
+    'Apple',
+    'Microsoft',
+    'Amazon',
+    'Facebook',
+    'Tesla',
+    'IBM',
+    'Intel',
+    'Samsung',
+    'Adobe',
+    'Netflix',
+    'Salesforce',
+    'Oracle',
+    'Twitter',
+    'LinkedIn',
   ];
 
   @override
@@ -145,6 +164,68 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                   });
                 },
                 selectedItems: _selectedDomains,
+                dropdownButtonProps: DropdownButtonProps(
+                  icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                ),
+              ),
+              SizedBox(height: 20),
+              DropdownSearch<String>.multiSelection(
+                items: _companies,
+                dropdownDecoratorProps: DropDownDecoratorProps(
+                  dropdownSearchDecoration: InputDecoration(
+                    labelText: 'Companies you are interested in',
+                    labelStyle: TextStyle(color: Colors.white),
+                    filled: true,
+                    fillColor: Color(0xFF1e1f20),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.white60),
+                    ),
+                  ),
+                ),
+                popupProps: PopupPropsMultiSelection.menu(
+                  showSearchBox: true,
+                  searchFieldProps: TextFieldProps(
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Color(0xFF1e1f20),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.white),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.white60),
+                      ),
+                    ),
+                  ),
+                  itemBuilder: (context, item, isSelected) {
+                    return Container(
+                      color: isSelected ? Color.fromRGBO(182, 109, 164, 1) : null,
+                      child: ListTile(
+                        title: Text(item, style: TextStyle(color: Colors.white)),
+                        selected: isSelected,
+                      ),
+                    );
+                  },
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCompanies = value;
+                  });
+                },
+                selectedItems: _selectedCompanies,
                 dropdownButtonProps: DropdownButtonProps(
                   icon: Icon(Icons.arrow_drop_down, color: Colors.white),
                 ),
