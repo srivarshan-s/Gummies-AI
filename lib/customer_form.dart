@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'dart:convert';
 import 'package:dropdown_search/dropdown_search.dart';
 
 class CustomerFormPage extends StatefulWidget {
@@ -10,6 +13,34 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   int _riskLevel = 1;
   List<String> _selectedDomains = [];
   List<String> _selectedCompanies = [];
+
+  TextEditingController _typeAheadController = TextEditingController();
+
+  Future<List<Suggestion>> _fetchCompanies(String pattern) async {
+    if (pattern == null || pattern.isEmpty) {
+      print('Filter is empty'); // Debug statement
+      return [];
+    }
+
+    print('Filter value: $pattern'); // Debug statement
+    final url =
+        'http://10.0.2.2:5000/autocomplete?query=$pattern'; // Use 10.0.2.2 for Android emulator
+    print('Fetching companies with URL: $url'); // Debug statement
+    final response = await http.get(Uri.parse(url));
+
+    print('HTTP status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body)['result'];
+      print('Parsed data: $data');
+      return List<Suggestion>.from(
+          data.map((item) => Suggestion.fromJson(item)));
+    } else {
+      print('Error fetching companies: ${response.body}');
+      throw Exception('Failed to fetch search results: ${response.body}');
+    }
+  }
 
   final List<String> _businessDomains = [
     'Accounting and Finance',
@@ -67,7 +98,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             onPressed: () {
               // Save functionality
             },
-            child: Text(
+            child: const Text(
               'Save',
               style: TextStyle(color: Colors.white),
             ),
@@ -75,7 +106,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Color(0xFF131314),
         ),
         padding: const EdgeInsets.all(16.0),
@@ -83,12 +114,12 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'We want to know more about you',
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 'How much of a risk taker are you?',
                 style: TextStyle(color: Colors.white, fontSize: 18),
               ),
@@ -106,7 +137,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                   });
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               DropdownSearch<String>.multiSelection(
                 items: _businessDomains,
                 dropdownDecoratorProps: DropDownDecoratorProps(
@@ -150,9 +181,11 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                   ),
                   itemBuilder: (context, item, isSelected) {
                     return Container(
-                      color: isSelected ? Color.fromRGBO(182, 109, 164, 1) : null,
+                      color:
+                          isSelected ? Color.fromRGBO(182, 109, 164, 1) : null,
                       child: ListTile(
-                        title: Text(item, style: TextStyle(color: Colors.white)),
+                        title:
+                            Text(item, style: TextStyle(color: Colors.white)),
                         selected: isSelected,
                       ),
                     );
@@ -164,11 +197,11 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                   });
                 },
                 selectedItems: _selectedDomains,
-                dropdownButtonProps: DropdownButtonProps(
+                dropdownButtonProps: const DropdownButtonProps(
                   icon: Icon(Icons.arrow_drop_down, color: Colors.white),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               DropdownSearch<String>.multiSelection(
                 items: _companies,
                 dropdownDecoratorProps: DropDownDecoratorProps(
@@ -212,9 +245,11 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                   ),
                   itemBuilder: (context, item, isSelected) {
                     return Container(
-                      color: isSelected ? Color.fromRGBO(182, 109, 164, 1) : null,
+                      color:
+                          isSelected ? Color.fromRGBO(182, 109, 164, 1) : null,
                       child: ListTile(
-                        title: Text(item, style: TextStyle(color: Colors.white)),
+                        title:
+                            Text(item, style: TextStyle(color: Colors.white)),
                         selected: isSelected,
                       ),
                     );
@@ -226,14 +261,103 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
                   });
                 },
                 selectedItems: _selectedCompanies,
-                dropdownButtonProps: DropdownButtonProps(
+                dropdownButtonProps: const DropdownButtonProps(
                   icon: Icon(Icons.arrow_drop_down, color: Colors.white),
                 ),
+              ),
+              Card(
+                elevation: 10.0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.0),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF131314),
+                  ),
+                  child: TypeAheadFormField(
+                    textFieldConfiguration: TextFieldConfiguration(
+                      controller: this._typeAheadController,
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.edit),
+                        labelText: 'Companies you are interested in',
+                        labelStyle: TextStyle(color: Colors.white),
+                        filled: true,
+                        fillColor: Color(0xFF1e1f20),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.white60),
+                        ),
+                      ),
+                    ),
+                    suggestionsCallback: (pattern) {
+                      return _fetchCompanies(pattern);
+                    },
+                    itemBuilder: (context, Suggestion suggestion) {
+                      return ListTile(
+                        title: Text(suggestion.description),
+                        subtitle: Text(suggestion.symbol),
+                      );
+                    },
+                    transitionBuilder: (context, suggestionsBox, controller) {
+                      return suggestionsBox;
+                    },
+                    onSuggestionSelected: (Suggestion suggestion) {
+                      this._typeAheadController.text = suggestion.description;
+                      setState(() {
+                        _selectedCompanies.add(suggestion.description);
+                      });
+                    },
+                    onSaved: (value) {
+                      // Save functionality
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Watchlist',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+              Wrap(
+                spacing: 8.0,
+                children: _selectedCompanies
+                    .map((company) => Chip(
+                          label: Text(company),
+                          deleteIcon: Icon(Icons.close),
+                          onDeleted: () {
+                            setState(() {
+                              _selectedCompanies.remove(company);
+                            });
+                          },
+                        ))
+                    .toList(),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class Suggestion {
+  final String description;
+  final String symbol;
+
+  Suggestion({required this.description, required this.symbol});
+
+  factory Suggestion.fromJson(Map<String, dynamic> json) {
+    return Suggestion(
+      description: json['description'] as String? ?? '',
+      symbol: json['symbol'] as String? ?? '',
     );
   }
 }
