@@ -43,7 +43,6 @@ class NewsAPI:
     
 # Main Class - Summarizer class
 class Summarizer:
-
     def __init__(self):
         pass
 
