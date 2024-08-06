@@ -5,6 +5,7 @@ import 'login.dart'; // Import the login.dart.file
 import 'customer_signup.dart';
 import 'startup_signup.dart';
 import 'customer_form.dart';
+import 'news.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/customer_signup': (context) => CustomerSignupPage(),
         '/startup_signup': (context) => StartupSignupPage(),
         '/customer_form': (context) => CustomerFormPage(),
+        '/news': (context) => StockMarketNewsPage(),
       },
     );
   }

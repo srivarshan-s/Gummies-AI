@@ -422,7 +422,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             SizedBox(width: 20),
             ElevatedButton(
               onPressed: () {
-                // Submit form
+                Navigator.pushNamed(context, '/news');
               },
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),

@@ -71,6 +71,8 @@ flutter:
     - assets/customer_circle.png
     - assets/cust_form1.png
     - assets/cust_form2.png
+    - assets/news1.jpg
+    - assets/news2.jpg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
