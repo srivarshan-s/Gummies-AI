@@ -1,0 +1,3 @@
+{
+    "SUMMARIZE_PROMPT":"Here is the set of news articles about a particular company. Summarize them into important incidents and events that will affect the stock values of that company. here are the articles {ARTICLES}. I need the output format in the form of json"
+}
