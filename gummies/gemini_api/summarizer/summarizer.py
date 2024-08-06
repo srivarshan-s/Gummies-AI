@@ -1,6 +1,4 @@
-import pandas as pd
 import os
-
 import requests
 
 # News API Class
@@ -44,17 +42,19 @@ class NewsAPI:
 # Main Class - Summarizer class
 class Summarizer:
     def __init__(self):
-        pass
+        self.news_api = NewsAPI()
 
-
-
+    def summarize_news(self,query=None):
+        news = self.news_api.get_all_news(query)
+        return news
+    
+    def get_highlights(self,query=None):
+        news = self.news_api.get_highlights(query)
+        return news
+        
 ## Test Scripts
 
-
 ## Load DotEnv File
+### Add the following code to the root file
 from dotenv import load_dotenv
 load_dotenv('../../../.env')
-
-newsInstance = NewsAPI()
-news = newsInstance.get_news()
-print(news)
