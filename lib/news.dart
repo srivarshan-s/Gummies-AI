@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
 
 class StockMarketNewsPage extends StatefulWidget {
   @override
@@ -10,12 +13,47 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
+  Future<List<dynamic>> _fetchNews() async {
+    final url = Uri.parse('http://10.0.2.2:5000/news');
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> newsData = json.decode(response.body);
+        return newsData;
+      } else {
+        print('Failed to load news. Status code: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching news: $e');
+      return [];
+    }
+  }
+
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
     _pageController.jumpToPage(index);
   }
+
+  String capitalize(String s) => s.isNotEmpty
+      ? s
+          .split(' ')
+          .map(
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase())
+          .join(' ')
+      : s;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +64,8 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Padding(
-              padding: const EdgeInsets.only(left: 1.0), // Added padding to the left side
+              padding: const EdgeInsets.only(
+                  left: 1.0), // Added padding to the left side
               child: ShaderMask(
                 shaderCallback: (bounds) => LinearGradient(
                   colors: [
@@ -48,7 +87,9 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.favorite, color: Color.fromRGBO(182, 109, 164, 1)), // Heart icon filled with red
+                  icon: Icon(Icons.favorite,
+                      color: Color.fromRGBO(
+                          182, 109, 164, 1)), // Heart icon filled with red
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -57,7 +98,8 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.person, color: Color.fromRGBO(182, 109, 164, 1)),
+                  icon: Icon(Icons.person,
+                      color: Color.fromRGBO(182, 109, 164, 1)),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -108,58 +150,115 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
         onTap: _onItemTapped,
         backgroundColor: Color(0xFF1e1f20), // Force background color to blue
         unselectedItemColor: Color.fromRGBO(217, 100, 112, 1),
-        type: BottomNavigationBarType.fixed, // Ensures the background color applies correctly
+        type: BottomNavigationBarType
+            .fixed, // Ensures the background color applies correctly
       ),
     );
   }
+
+  // Widget _buildNewsPage() {
+  //   return Container(
+  //     decoration: BoxDecoration(
+  //       color: Color(0xFF131314),
+  //     ),
+  //     padding: const EdgeInsets.all(16.0),
+  //     child: Center(
+  //       child: SingleChildScrollView(
+  //         child: Column(
+  //           mainAxisAlignment: MainAxisAlignment.center,
+  //           children: [
+  //             const Text(
+  //               'Stock Market News',
+  //               style: TextStyle(
+  //                 color: Color.fromRGBO(182, 109, 164, 1),
+  //                 fontSize: 24,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //             SizedBox(height: 20),
+  //             _buildNewsCard(
+  //               context,
+  //               'Kamala Harris to Announce Vice President Pick Ahead of Key Battleground States Tour',
+  //               'assets/news1.jpg',
+  //               'Strategic Move for 2024 Election Campaign',
+  //               "Vice President Kamala Harris is set to reveal her running mate before embarking on a critical tour of battleground states for the 2024 election. This announcement aims to strengthen the Democratic campaign by highlighting the chosen vice-presidential candidate's attributes and readiness to address pivotal issues facing voters. The tour will focus on rallying support in states that are crucial for securing electoral votes in the upcoming presidential election. For more information, click the link below.",
+  //               'https://www.reuters.com/world/us/kamala-harris-announce-vice-president-pick-before-battleground-states-tour-2024-08-05/',
+  //               0,
+  //             ),
+  //             SizedBox(height: 20),
+  //             _buildNewsCard(
+  //               context,
+  //               'Student Protests in Bangladesh Turn Violent',
+  //               'assets/news2.jpg',
+  //               "Student demonstrations over government job quotas escalate into clashes with police, challenging Prime Minister Sheikh Hasina's administration.",
+  //               "Bangladesh is experiencing significant unrest as students demand reforms to the government job quota system, arguing it unfairly benefits certain groups. The protests have escalated into violent confrontations with law enforcement. Prime Minister Sheikh Hasina has promised to address the issue, but tensions remain high as students continue to push for change. For more information, click the link below.",
+  //               'https://apnews.com/article/bangladesh-hasina-student-protest-quota-violence-fdc7f2632c3d8fcbd913e6c0a1903fd4',
+  //               1,
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildNewsPage() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF131314),
-      ),
-      padding: const EdgeInsets.all(16.0),
-      child: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Stock Market News',
-                style: TextStyle(
-                  color: Color.fromRGBO(182, 109, 164, 1),
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+    return FutureBuilder<List<dynamic>>(
+      future: _fetchNews(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('No news available.'));
+        } else {
+          final newsList = snapshot.data!;
+          return Container(
+            decoration: BoxDecoration(
+              color: Color(0xFF131314),
+            ),
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Stock Market News',
+                    style: TextStyle(
+                      color: Color.fromRGBO(182, 109, 164, 1),
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  ...newsList.map((newsItem) {
+                    return Column(
+                      children: [
+                        _buildNewsCard(
+                          context,
+                          newsItem['headline'],
+                          newsItem['image'],
+                          capitalize(newsItem['category']),
+                          newsItem['summary'],
+                          newsItem['url'],
+                          newsList.indexOf(newsItem),
+                        ),
+                        SizedBox(height: 20),
+                      ],
+                    );
+                  }).toList(),
+                ],
               ),
-              SizedBox(height: 20),
-              _buildNewsCard(
-                context,
-                'Kamala Harris to Announce Vice President Pick Ahead of Key Battleground States Tour',
-                'assets/news1.jpg',
-                'Strategic Move for 2024 Election Campaign',
-                "Vice President Kamala Harris is set to reveal her running mate before embarking on a critical tour of battleground states for the 2024 election. This announcement aims to strengthen the Democratic campaign by highlighting the chosen vice-presidential candidate's attributes and readiness to address pivotal issues facing voters. The tour will focus on rallying support in states that are crucial for securing electoral votes in the upcoming presidential election. For more information, click the link below.",
-                'https://www.reuters.com/world/us/kamala-harris-announce-vice-president-pick-before-battleground-states-tour-2024-08-05/',
-                0,
-              ),
-              SizedBox(height: 20),
-              _buildNewsCard(
-                context,
-                'Student Protests in Bangladesh Turn Violent',
-                'assets/news2.jpg',
-                "Student demonstrations over government job quotas escalate into clashes with police, challenging Prime Minister Sheikh Hasina's administration.",
-                "Bangladesh is experiencing significant unrest as students demand reforms to the government job quota system, arguing it unfairly benefits certain groups. The protests have escalated into violent confrontations with law enforcement. Prime Minister Sheikh Hasina has promised to address the issue, but tensions remain high as students continue to push for change. For more information, click the link below.",
-                'https://apnews.com/article/bangladesh-hasina-student-protest-quota-violence-fdc7f2632c3d8fcbd913e6c0a1903fd4',
-                1,
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          );
+        }
+      },
     );
   }
 
-  Widget _buildNewsCard(BuildContext context, String title, String imagePath, String subtitle, String detail, String link, int index) {
+  Widget _buildNewsCard(BuildContext context, String title, String imagePath,
+      String subtitle, String detail, String link, int index) {
     bool isExpanded = _expandedIndex == index;
 
     return GestureDetector(
@@ -178,17 +277,21 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-                child: Image.asset(
-                  imagePath,
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+              Image.network(
+                imagePath,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: Colors.grey,
+                    child: Center(
+                      child: Icon(Icons.broken_image, size: 50),
+                    ),
+                  );
+                },
               ),
               SizedBox(height: 16),
               Text(
@@ -221,6 +324,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
                 GestureDetector(
                   onTap: () {
                     // Handle link click
+                    // _launchURL(link);
                   },
                   child: Text(
                     'Read more',
