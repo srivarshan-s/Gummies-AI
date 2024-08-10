@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
 class CustomerSignupPage extends StatefulWidget {
@@ -26,8 +28,6 @@ class _CustomerSignupPageState extends State<CustomerSignupPage> {
       String email = _emailController.text;
       String password = _passwordController.text;
 
-      // Implement your signup logic here
-      // For now, just print the input values
       print('First Name: $firstName');
       print('Last Name: $lastName');
       print('Email: $email');
@@ -42,14 +42,55 @@ class _CustomerSignupPageState extends State<CustomerSignupPage> {
         );
         // Navigate to home screen or show success message
         print('Sign-up successful: ${userCredential.user}');
+
+        final mongoDBUserId = await _storeUserInMongoDB(
+            firstName, lastName, userCredential.user!);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Signup successful')),
         );
-        Navigator.pushNamed(context, '/customer_form');
+
+        Navigator.pushNamed(
+          context,
+          '/customer_form',
+          arguments: mongoDBUserId,
+        );
       } on FirebaseAuthException catch (e) {
         // Handle error
         print('Sign-up failed: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign-up failed: $e')),
+        );
       }
+    }
+  }
+
+  Future<String> _storeUserInMongoDB(
+      String firstname, String lastname, User user) async {
+    final url = 'http://10.0.2.2:5000/store_user';
+    final userData = {
+      'email': user.email,
+      'id': user.uid,
+      'displayName': firstname + ' ' + lastname,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(userData),
+      );
+
+      if (response.statusCode == 201) {
+        final responseData = json.decode(response.body);
+        return responseData['id'];
+      } else {
+        print('Failed to store user in MongoDB: ${response.body}');
+        throw Exception('Failed to store user in MongoDB');
+      }
+    } catch (e) {
+      print('Error: $e');
+      throw e;
     }
   }
 

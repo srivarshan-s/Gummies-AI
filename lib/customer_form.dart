@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -10,6 +10,7 @@ class CustomerFormPage extends StatefulWidget {
 }
 
 class _CustomerFormPageState extends State<CustomerFormPage> {
+  String? userId;
   int _riskLevel = 1;
   List<String> _selectedDomains = [];
   List<String> _selectedCompanies = [];
@@ -30,6 +31,18 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    // Retrieve the MongoDB user ID passed as an argument and store it in the state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as String?;
+      setState(() {
+        userId = args;
+      });
+    });
+  }
+
   Future<List<Suggestion>> _fetchCompanies(String pattern) async {
     if (pattern.isEmpty) {
       return [];
@@ -46,6 +59,40 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
       throw Exception('Failed to fetch search results: ${response.body}');
     }
   }
+
+  Future<void> _submitWatchlist() async {
+    final url = 'http://10.0.2.2:5000/add_to_watchlist';
+    final watchlistData = {
+      'user': userId,
+      'selected_companies': _selectedCompanies,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(watchlistData),
+      );
+
+      if (response.statusCode == 201) {
+        // Navigate to news page if the data is successfully added
+        Navigator.pushNamed(context, '/news', arguments: userId);
+      } else {
+        // Handle error
+        print('Failed to add watchlist: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  String capitalize(String s) => s.isNotEmpty
+      ? s
+          .split(' ')
+          .map(
+              (word) => word[0].toUpperCase() + word.substring(1).toLowerCase())
+          .join(' ')
+      : s;
 
   final List<String> _businessDomains = [
     'Accounting and Finance',
@@ -75,22 +122,22 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     'Sports and Recreation',
   ];
 
-  final List<String> _companies = [
-    'Google',
-    'Apple',
-    'Microsoft',
-    'Amazon',
-    'Facebook',
-    'Tesla',
-    'IBM',
-    'Intel',
-    'Samsung',
-    'Adobe',
-    'Netflix',
-    'Salesforce',
-    'Oracle',
-    'Twitter',
-    'LinkedIn',
+  final List<Suggestion> _initialCompanies = [
+    Suggestion(description: 'Google', symbol: 'GOOGL'),
+    Suggestion(description: 'Apple', symbol: 'AAPL'),
+    Suggestion(description: 'Microsoft', symbol: 'MSFT'),
+    Suggestion(description: 'Amazon', symbol: 'AMZN'),
+    Suggestion(description: 'Facebook', symbol: 'FB'),
+    Suggestion(description: 'Tesla', symbol: 'TSLA'),
+    Suggestion(description: 'IBM', symbol: 'IBM'),
+    Suggestion(description: 'Intel', symbol: 'INTC'),
+    Suggestion(description: 'Samsung', symbol: 'SSNLF'),
+    Suggestion(description: 'Adobe', symbol: 'ADBE'),
+    Suggestion(description: 'Netflix', symbol: 'NFLX'),
+    Suggestion(description: 'Salesforce', symbol: 'CRM'),
+    Suggestion(description: 'Oracle', symbol: 'ORCL'),
+    Suggestion(description: 'Twitter', symbol: 'TWTR'),
+    Suggestion(description: 'LinkedIn', symbol: 'LNKD'),
   ];
 
   final List<String> _investmentExperiences = [
@@ -135,11 +182,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     'Aggressive (High risk, high return)'
   ];
 
-  final List<String> _dividendPreferences = [
-    'Yes',
-    'No',
-    'No preference'
-  ];
+  final List<String> _dividendPreferences = ['Yes', 'No', 'No preference'];
 
   final List<String> _geographicalRegions = [
     'North America',
@@ -189,17 +232,16 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
-          child : Image.asset('assets/cust_form1.png', height: 300),
+          child: Image.asset('assets/cust_form1.png', height: 300),
         ),
         SizedBox(height: 5),
         Center(
           child: const Text(
             'We want to know more about you',
             style: TextStyle(
-              color: Color.fromRGBO(182, 109, 164, 1),
-              fontSize: 24,
-              fontWeight: FontWeight.bold
-            ),
+                color: Color.fromRGBO(182, 109, 164, 1),
+                fontSize: 24,
+                fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(height: 20),
@@ -254,7 +296,6 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             });
           },
         ),
-
         const SizedBox(height: 20),
         _buildDropdownSingleSelection(
           items: _financialSituations,
@@ -266,7 +307,6 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             });
           },
         ),
-
         const SizedBox(height: 20),
         _buildDropdownSingleSelection(
           items: _investmentStrategies,
@@ -311,7 +351,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
-          child : Image.asset('assets/cust_form2.png', height: 300),
+          child: Image.asset('assets/cust_form2.png', height: 300),
         ),
         const SizedBox(height: 5),
         _buildDropdownSingleSelection(
@@ -346,7 +386,6 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             });
           },
         ),
-
         const SizedBox(height: 20),
         _buildDropdownMultiSelection(
           items: _businessDomains,
@@ -358,18 +397,71 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             });
           },
         ),
-
         const SizedBox(height: 20),
-        _buildDropdownMultiSelection(
-          items: _companies,
-          label: 'Companies you are interested in',
-          selectedItems: _selectedCompanies,
-          onChanged: (value) {
-            setState(() {
-              _selectedCompanies = value;
-            });
+        TypeAheadFormField<Suggestion>(
+          textFieldConfiguration: TextFieldConfiguration(
+            controller: _typeAheadController,
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: 'Companies you are interested in',
+              labelStyle: TextStyle(color: Colors.white),
+              filled: true,
+              fillColor: Color(0xFF1e1f20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Colors.white60),
+              ),
+            ),
+          ),
+          suggestionsCallback: (pattern) async {
+            List<Suggestion> matches = [];
+            if (pattern.isEmpty) {
+              matches.addAll(_initialCompanies);
+            } else {
+              matches.addAll(_initialCompanies.where((company) => company
+                  .description
+                  .toLowerCase()
+                  .contains(pattern.toLowerCase())));
+
+              List<Suggestion> fetchedCompanies =
+                  await _fetchCompanies(pattern);
+              matches.addAll(fetchedCompanies);
+            }
+            return matches;
           },
-          showSearchBox: true,
+          itemBuilder: (context, Suggestion suggestion) {
+            return ListTile(
+              title: Text(
+                capitalize(suggestion.description),
+                style: TextStyle(color: Colors.white),
+              ),
+              subtitle: Text(
+                suggestion.symbol,
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          },
+          suggestionsBoxDecoration: SuggestionsBoxDecoration(
+            color: Color(0xFF1e1f20), // Background color of the dropdown
+            borderRadius: BorderRadius.circular(8),
+            elevation: 4.0,
+          ),
+          onSuggestionSelected: (Suggestion suggestion) {
+            setState(() {
+              _selectedCompanies.add(capitalize(suggestion.description));
+            });
+            _typeAheadController.clear();
+          },
+          onSaved: (value) {
+            // You can process the selected companies here or during form submission
+          },
         ),
         const SizedBox(height: 20),
         const Text(
@@ -377,23 +469,21 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
           style: TextStyle(
               color: Color.fromRGBO(182, 109, 164, 1),
               fontSize: 24,
-              fontWeight: FontWeight.bold
-          ),
+              fontWeight: FontWeight.bold),
         ),
         Wrap(
           spacing: 8.0,
           children: _selectedCompanies
               .map((company) => Chip(
-            label:
-            Text(company, style: TextStyle(color: Colors.white)),
-            deleteIcon: Icon(Icons.close, color: Colors.white),
-            backgroundColor: Color(0xFF1e1f20),
-            onDeleted: () {
-              setState(() {
-                _selectedCompanies.remove(company);
-              });
-            },
-          ))
+                    label: Text(company, style: TextStyle(color: Colors.white)),
+                    deleteIcon: Icon(Icons.close, color: Colors.white),
+                    backgroundColor: Color(0xFF1e1f20),
+                    onDeleted: () {
+                      setState(() {
+                        _selectedCompanies.remove(company);
+                      });
+                    },
+                  ))
               .toList(),
         ),
         const SizedBox(height: 20),
@@ -423,7 +513,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             SizedBox(width: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/news');
+                _submitWatchlist();
               },
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
@@ -525,9 +615,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
       dropdownDecoratorProps: DropDownDecoratorProps(
         dropdownSearchDecoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(
-              color: Colors.white,
-          fontSize: 18),
+          labelStyle: TextStyle(color: Colors.white, fontSize: 18),
           filled: true,
           fillColor: Color(0xFF1e1f20),
           border: OutlineInputBorder(

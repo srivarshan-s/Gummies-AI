@@ -36,7 +36,11 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login successful')),
         );
-        Navigator.pushNamed(context, '/news');
+        Navigator.pushNamed(
+          context,
+          '/news',
+          arguments: userCredential.user!.uid,
+        );
       } on FirebaseAuthException catch (e) {
         // Handle error
         print('Login failed: $e');

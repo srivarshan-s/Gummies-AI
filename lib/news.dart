@@ -9,6 +9,7 @@ class StockMarketNewsPage extends StatefulWidget {
 }
 
 class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
+  String? userId;
   int? _expandedIndex;
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
@@ -20,6 +21,12 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
   void initState() {
     super.initState();
     _fetchNews();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as String?;
+      setState(() {
+        userId = args;
+      });
+    });
   }
 
   @override
@@ -118,20 +125,15 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
                       color: Color.fromRGBO(
                           182, 109, 164, 1)), // Heart icon filled with red
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => DummyPage()),
-                    );
+                    Navigator.pushNamed(context, '/watchlist',
+                        arguments: userId); // Navigate to WatchlistPage
                   },
                 ),
                 IconButton(
                   icon: Icon(Icons.person,
                       color: Color.fromRGBO(182, 109, 164, 1)),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => DummyPage()),
-                    );
+                    Navigator.pushNamed(context, '/profile', arguments: userId);
                   },
                 ),
               ],
