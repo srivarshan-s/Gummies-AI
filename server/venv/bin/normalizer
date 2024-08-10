@@ -1,4 +1,4 @@
-#!/Users/swathiasok/Desktop/USC/GeminiDevAPI/Gummies-AI/server/venv/bin/python3
+#!/Users/faeriemattins/AndroidStudioProjects/Gummies-AI/server/venv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys
