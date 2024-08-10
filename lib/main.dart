@@ -7,6 +7,8 @@ import 'startup_signup.dart';
 import 'customer_form.dart';
 import 'news.dart';
 import 'startup_form.dart';
+import 'profile.dart';
+import 'watchlist.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +34,8 @@ class MyApp extends StatelessWidget {
         '/customer_form': (context) => CustomerFormPage(),
         '/startup_form': (context) => StartupFormPage(),
         '/news': (context) => StockMarketNewsPage(),
+        '/profile': (context) => ProfilePage(),
+        '/watchlist': (context) => WatchlistPage(),
       },
     );
   }
