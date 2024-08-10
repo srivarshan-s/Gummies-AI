@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
+import 'discover.dart';
 
 class StockMarketNewsPage extends StatefulWidget {
   @override
@@ -150,7 +151,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
         },
         children: [
           _buildNewsPage(),
-          DummyPage(),
+          _buildDiscoverPage(),
           DummyPage(),
           DummyPage(),
         ],
@@ -225,6 +226,11 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
       ),
     );
   }
+
+  Widget _buildDiscoverPage() {
+    return DiscoverNewsPage(); // Defined in discover.dart
+  }
+
 
   Widget _buildNewsCard(BuildContext context, String title, String imagePath,
       String subtitle, String detail, String link, int index) {

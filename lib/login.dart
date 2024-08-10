@@ -44,6 +44,9 @@ class _LoginPageState extends State<LoginPage> {
       } on FirebaseAuthException catch (e) {
         // Handle error
         print('Login failed: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login failed. Please check your credentials')),
+        );
       }
     }
   }
