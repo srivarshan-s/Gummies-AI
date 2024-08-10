@@ -37,7 +37,7 @@ class Stocks:
 		from_date_str = from_date.strftime("%Y-%m-%d")
 
 
-		with open('news_summary.txt', 'w') as file:
+		with open('news_summary.txt', 'w', encoding='utf-8') as file:
 			articles = self.finnhub_client.company_news(ticker, _from=from_date_str, to=to_date_str)
 			
 			for article in articles:
@@ -49,7 +49,7 @@ class Stocks:
 				file.write('\n')
 
 
-		with open('news_summary.txt', 'r') as file:
+		with open('news_summary.txt', 'r', encoding='utf-8') as file:
 			news = file.read()
 
 		response = model.generate_content(news)

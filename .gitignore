@@ -94,6 +94,8 @@ linux/.pub/
 *.sublime-workspace
 *.sublime-project
 
+news_summary.txt
+
 # File to store environment variables
 .env
 
