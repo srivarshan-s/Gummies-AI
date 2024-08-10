@@ -96,3 +96,6 @@ linux/.pub/
 
 # File to store environment variables
 .env
+
+# Python virtual environments
+*/venv/
