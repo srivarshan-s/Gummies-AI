@@ -36,6 +36,7 @@ class _LoginPageState extends State<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login successful')),
         );
+        Navigator.pushNamed(context, '/news');
       } on FirebaseAuthException catch (e) {
         // Handle error
         print('Login failed: $e');
@@ -170,10 +171,11 @@ class _LoginPageState extends State<LoginPage> {
                       _isHoveringSubmit = false;
                     }),
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context,
-                            '/customer_form'); // Navigate to Sign Up Page
-                      },
+                      // onPressed: () {
+                      //   Navigator.pushNamed(context,
+                      //       '/customer_form'); // Navigate to Sign Up Page
+                      // },
+                      onPressed: _submit,
                       style: ElevatedButton.styleFrom(
                         padding:
                             EdgeInsets.symmetric(horizontal: 50, vertical: 15),

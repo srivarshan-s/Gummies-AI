@@ -45,6 +45,7 @@ class _CustomerSignupPageState extends State<CustomerSignupPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Signup successful')),
         );
+        Navigator.pushNamed(context, '/customer_form');
       } on FirebaseAuthException catch (e) {
         // Handle error
         print('Sign-up failed: $e');
