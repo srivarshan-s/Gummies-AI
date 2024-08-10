@@ -7,6 +7,7 @@ import 'startup_signup.dart';
 import 'customer_form.dart';
 import 'news.dart';
 import 'startup_form.dart';
+import 'discover.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
         '/customer_form': (context) => CustomerFormPage(),
         '/startup_form': (context) => StartupFormPage(),
         '/news': (context) => StockMarketNewsPage(),
+        '/discover': (context) => DiscoverNewsPage(),
       },
     );
   }
@@ -109,6 +111,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   onPressed: () {
                     Navigator.pushNamed(
                         context, '/login'); // Navigate to ChoicePage
+                        // context, '/news');
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
