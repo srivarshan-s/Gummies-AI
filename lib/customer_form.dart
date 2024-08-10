@@ -169,7 +169,8 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
         decoration: BoxDecoration(
           color: Color(0xFF131314),
         ),
-        padding: const EdgeInsets.all(16.0),
+        // padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(20, 80, 20, 80),
         child: Center(
           child: SingleChildScrollView(
             child: Form(

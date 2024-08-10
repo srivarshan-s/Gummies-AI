@@ -74,6 +74,9 @@ flutter:
     - assets/cust_form2.png
     - assets/news1.jpg
     - assets/news2.jpg
+    - assets/startup_form1.png
+    - assets/startup_form2.png
+    - assets/google-gemini-icon.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

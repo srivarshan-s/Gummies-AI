@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'startup_form.dart';
+
 
 class StartupSignupPage extends StatefulWidget {
   @override
@@ -15,6 +17,10 @@ class _StartupSignupPageState extends State<StartupSignupPage> {
   bool _isPasswordVisible = false;
 
   void _submit() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => StartupFormPage()),
+    );
     if (_formKey.currentState!.validate()) {
       // Handle signup with valid inputs
       String companyName = _companyNameController.text;
