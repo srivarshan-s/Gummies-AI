@@ -12,31 +12,45 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
   int? _expandedIndex;
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
+  List<dynamic> _newsData = []; // State variable to store fetched news data
+  bool _isLoading = true;
+  String _loadingError = '';
 
-  Future<List<dynamic>> _fetchNews() async {
+  @override
+  void initState() {
+    super.initState();
+    _fetchNews();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose(); // Dispose of the PageController
+    super.dispose();
+  }
+
+  Future<void> _fetchNews() async {
     final url = Uri.parse('http://10.0.2.2:5000/news');
     try {
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final List<dynamic> newsData = json.decode(response.body);
-        return newsData;
+        setState(() {
+          _newsData = newsData;
+          _isLoading = false;
+        });
       } else {
-        print('Failed to load news. Status code: ${response.statusCode}');
-        return [];
+        setState(() {
+          _loadingError =
+              'Failed to load news. Status code: ${response.statusCode}';
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      print('Error fetching news: $e');
-      return [];
-    }
-  }
-
-  Future<void> _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      throw 'Could not launch $url';
+      setState(() {
+        _loadingError = 'Error fetching news: $e';
+        _isLoading = false;
+      });
     }
   }
 
@@ -45,6 +59,19 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
       _selectedIndex = index;
     });
     _pageController.jumpToPage(index);
+  }
+
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      // Gracefully handle the error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not launch $url')),
+      );
+      throw 'Could not launch $url';
+    }
   }
 
   String capitalize(String s) => s.isNotEmpty
@@ -156,104 +183,44 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
     );
   }
 
-  // Widget _buildNewsPage() {
-  //   return Container(
-  //     decoration: BoxDecoration(
-  //       color: Color(0xFF131314),
-  //     ),
-  //     padding: const EdgeInsets.all(16.0),
-  //     child: Center(
-  //       child: SingleChildScrollView(
-  //         child: Column(
-  //           mainAxisAlignment: MainAxisAlignment.center,
-  //           children: [
-  //             const Text(
-  //               'Stock Market News',
-  //               style: TextStyle(
-  //                 color: Color.fromRGBO(182, 109, 164, 1),
-  //                 fontSize: 24,
-  //                 fontWeight: FontWeight.bold,
-  //               ),
-  //             ),
-  //             SizedBox(height: 20),
-  //             _buildNewsCard(
-  //               context,
-  //               'Kamala Harris to Announce Vice President Pick Ahead of Key Battleground States Tour',
-  //               'assets/news1.jpg',
-  //               'Strategic Move for 2024 Election Campaign',
-  //               "Vice President Kamala Harris is set to reveal her running mate before embarking on a critical tour of battleground states for the 2024 election. This announcement aims to strengthen the Democratic campaign by highlighting the chosen vice-presidential candidate's attributes and readiness to address pivotal issues facing voters. The tour will focus on rallying support in states that are crucial for securing electoral votes in the upcoming presidential election. For more information, click the link below.",
-  //               'https://www.reuters.com/world/us/kamala-harris-announce-vice-president-pick-before-battleground-states-tour-2024-08-05/',
-  //               0,
-  //             ),
-  //             SizedBox(height: 20),
-  //             _buildNewsCard(
-  //               context,
-  //               'Student Protests in Bangladesh Turn Violent',
-  //               'assets/news2.jpg',
-  //               "Student demonstrations over government job quotas escalate into clashes with police, challenging Prime Minister Sheikh Hasina's administration.",
-  //               "Bangladesh is experiencing significant unrest as students demand reforms to the government job quota system, arguing it unfairly benefits certain groups. The protests have escalated into violent confrontations with law enforcement. Prime Minister Sheikh Hasina has promised to address the issue, but tensions remain high as students continue to push for change. For more information, click the link below.",
-  //               'https://apnews.com/article/bangladesh-hasina-student-protest-quota-violence-fdc7f2632c3d8fcbd913e6c0a1903fd4',
-  //               1,
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget _buildNewsPage() {
-    return FutureBuilder<List<dynamic>>(
-      future: _fetchNews(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('No news available.'));
-        } else {
-          final newsList = snapshot.data!;
-          return Container(
-            decoration: BoxDecoration(
-              color: Color(0xFF131314),
-            ),
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Stock Market News',
-                    style: TextStyle(
-                      color: Color.fromRGBO(182, 109, 164, 1),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  ...newsList.map((newsItem) {
-                    return Column(
-                      children: [
-                        _buildNewsCard(
-                          context,
-                          newsItem['headline'],
-                          newsItem['image'],
-                          capitalize(newsItem['category']),
-                          newsItem['summary'],
-                          newsItem['url'],
-                          newsList.indexOf(newsItem),
-                        ),
-                        SizedBox(height: 20),
-                      ],
-                    );
-                  }).toList(),
-                ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Color(0xFF131314),
+      ),
+      padding: const EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Stock Market News',
+              style: TextStyle(
+                color: Color.fromRGBO(182, 109, 164, 1),
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          );
-        }
-      },
+            SizedBox(height: 20),
+            ..._newsData.map((newsItem) {
+              return Column(
+                children: [
+                  _buildNewsCard(
+                    context,
+                    newsItem['headline'],
+                    newsItem['image'],
+                    capitalize(newsItem['category']),
+                    newsItem['summary'],
+                    newsItem['url'],
+                    _newsData.indexOf(newsItem),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              );
+            }).toList(),
+          ],
+        ),
+      ),
     );
   }
 
@@ -324,7 +291,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
                 GestureDetector(
                   onTap: () {
                     // Handle link click
-                    // _launchURL(link);
+                    _launchURL(link);
                   },
                   child: Text(
                     'Read more',
