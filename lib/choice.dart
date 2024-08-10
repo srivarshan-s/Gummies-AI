@@ -74,7 +74,7 @@ class ChoicePage extends StatelessWidget {
                     ),
                     SizedBox(height: 20),
                     Text(
-                      'Start up',
+                      'Small Business',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 30,
