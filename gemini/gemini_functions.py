@@ -7,11 +7,13 @@ import uvicorn
 
 from io import StringIO
 import google.generativeai as genai
+
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
 import finnhub
 from fastapi import FastAPI
+import requests
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -137,12 +139,6 @@ def stockOpinion(ticker):
             if num_hits <= 0:
                 return {"text": "ERROR"}
 		
-
-import os
-import requests
-import json
-
-import google.generativeai as genai
 
 # News API Class
 class NewsAPI:  
