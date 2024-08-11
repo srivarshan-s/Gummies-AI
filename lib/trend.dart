@@ -46,18 +46,12 @@ class _TrendsPageState extends State<TrendsPage>
     fetchStockDetails();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   Future<List<Suggestion>> _fetchCompanies(String pattern) async {
     if (pattern.isEmpty) {
       return [];
     }
 
-    final url = 'http://10.0.2.2:5000/autocomplete?query=$pattern';
+    final url = 'http://10.0.2.2:3000/autocomplete?query=$pattern';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -69,24 +63,29 @@ class _TrendsPageState extends State<TrendsPage>
     }
   }
 
-  // void _onCompanySelected(Suggestion suggestion) {
-  //   print("Selected: ${suggestion.symbol}");
-  //   setState(() {
-  //     initialCompanies.insert(0, suggestion.symbol); // Add to the top
-  //   });
-  //   print(initialCompanies);
-  // }
+  void _onCompanySelected(Suggestion suggestion) async {
+  print("Selected: ${suggestion.symbol}");
+  
+  if (!initialCompanies.contains(suggestion.symbol)) {
+    setState(() {
+      initialCompanies.insert(0, suggestion.symbol);
+    });
 
-  void _onCompanySelected(Suggestion suggestion) {
-  setState(() {
+    // Fetch stock details asynchronously
+    final stockDetails = await _fetchStockDetail(suggestion.symbol);
+    
+    if (stockDetails != null) {
+      setState(() {
+        companies.insert(0, stockDetails);
+      });
+    }
+  }
 
-    // Add the selected company to the top of the list
-    initialCompanies.insert(0, suggestion.symbol);
-  });
+  print(initialCompanies);
 }
 
   Future<void> _addToWatchlist(String symbol, String companyName) async {
-    final url = 'http://10.0.2.2:5000/add_to_watchlist';
+    final url = 'http://10.0.2.2:3000/add_to_watchlist';
     final _selectedCompanies = {'name': companyName, 'symbol': symbol};
     final watchlistData = {
       'user': widget.userId,
@@ -114,7 +113,7 @@ class _TrendsPageState extends State<TrendsPage>
 
   Future<void> _removeFromWatchlist(String symbol) async {
     final url =
-        'http://10.0.2.2:5000/remove_from_watchlist?user=${widget.userId}&symbol=$symbol';
+        'http://10.0.2.2:3000/remove_from_watchlist?user=${widget.userId}&symbol=$symbol';
 
     try {
       final response = await http.delete(Uri.parse(url));
@@ -161,7 +160,7 @@ class _TrendsPageState extends State<TrendsPage>
   }
 
   Future<Map<String, dynamic>?> _fetchStockDetail(String symbol) async {
-    final url = 'http://10.0.2.2:5000/stock_details?query=$symbol';
+    final url = 'http://10.0.2.2:3000/stock_details?query=$symbol';
     try {
       final response = await http.get(Uri.parse(url));
 
@@ -213,7 +212,7 @@ class _TrendsPageState extends State<TrendsPage>
   }
 
   Future<void> _fetchUserWatchlist() async {
-    final url = 'http://10.0.2.2:5000/get_watchlist?user_id=${widget.userId}';
+    final url = 'http://10.0.2.2:3000/get_watchlist?user_id=${widget.userId}';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -235,6 +234,12 @@ class _TrendsPageState extends State<TrendsPage>
     } catch (e) {
       print('Error fetching watchlist: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
