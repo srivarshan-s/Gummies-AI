@@ -67,7 +67,7 @@ class _CustomerSignupPageState extends State<CustomerSignupPage> {
 
   Future<String> _storeUserInMongoDB(
       String firstname, String lastname, User user) async {
-    final url = 'http://10.0.2.2:5000/store_user';
+    final url = 'http://10.0.2.2:3000/store_user';
     final userData = {
       'email': user.email,
       'id': user.uid,

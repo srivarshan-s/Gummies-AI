@@ -39,7 +39,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
   }
 
   Future<void> _fetchNews() async {
-    final url = Uri.parse('http://10.0.2.2:5000/news');
+    final url = Uri.parse('http://10.0.2.2:3000/news');
     try {
       final response = await http.get(url);
 
@@ -239,7 +239,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
   }
 
   Widget _buildInsightsPage() {
-    return InsightsPage(); // Defined in discover.dart
+    return InsightsPage(userId: userId!); // Defined in discover.dart
   }
 
 

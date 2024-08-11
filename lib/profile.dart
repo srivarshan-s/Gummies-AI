@@ -32,7 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<Map<String, dynamic>> _fetchUserData(String userId) async {
-    final url = 'http://10.0.2.2:5000/get_user_data?user_id=$userId';
+    final url = 'http://10.0.2.2:3000/get_user_data?user_id=$userId';
 
     try {
       final response = await http.get(Uri.parse(url));

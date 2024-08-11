@@ -36,12 +36,14 @@ class MyApp extends StatelessWidget {
         '/customer_form': (context) => CustomerFormPage(),
         '/startup_form': (context) => StartupFormPage(),
         '/news': (context) => StockMarketNewsPage(),
-        // '/profile': (context) => ProfilePage(),
+        '/profile': (context) => ProfilePage(),
         '/watchlist': (context) => WatchlistPage(),
         '/trend': (context) => TrendsPage(
               userId: '1',
         ),
-        '/insights': (context) => InsightsPage(),
+        '/insights': (context) => InsightsPage(
+              userId: '1',
+        ),
       },
     );
   }

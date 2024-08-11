@@ -70,7 +70,7 @@ class _StartupSignupPageState extends State<StartupSignupPage> {
   };
 
   // Replace with your MongoDB API endpoint
-  final url = 'http://10.0.2.2:5000/store_company';
+  final url = 'http://10.0.2.2:3000/store_company';
 
   try {
     final response = await http.post(

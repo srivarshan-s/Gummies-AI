@@ -48,7 +48,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
       return [];
     }
 
-    final url = 'http://10.0.2.2:5000/autocomplete?query=$pattern';
+    final url = 'http://10.0.2.2:3000/autocomplete?query=$pattern';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
@@ -61,7 +61,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   }
 
   Future<void> _submitWatchlist() async {
-    final url = 'http://10.0.2.2:5000/add_to_watchlist';
+    final url = 'http://10.0.2.2:3000/add_to_watchlist';
     final watchlistData = {
       'user': userId,
       'selected_companies': _selectedCompanies,

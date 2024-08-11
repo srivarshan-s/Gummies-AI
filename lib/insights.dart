@@ -4,6 +4,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class InsightsPage extends StatefulWidget {
+  final String userId;
+
+  InsightsPage({required this.userId});
+
   @override
   _InsightsPageState createState() => _InsightsPageState();
 }
@@ -14,50 +18,89 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
   late Animation<double> _animation;
   List<Map<String, String>> stockOpinions = [];
   bool isLoading = true;
+  List<String> userWatchlist = [];
 
-  final List<Map<String, String>> bigCompaniesList = [
-  {
-    'symbol': 'AAPL',
-    'companyName': 'Apple Inc.',
-  },
-  {
-    'symbol': 'GOOGL',
-    'companyName': 'Alphabet Inc.',
-  },
-];
-
-final List<Map<String, String>> smallCompaniesList = [
-  {
-    'symbol': 'AAPL',
-    'companyName': 'Apple Inc.',
-  },
-  {
-    'symbol': 'GOOGL',
-    'companyName': 'Alphabet Inc.',
-  },
-];
+  final List<Map<String, String>> bigCompaniesList = [];
+  final List<Map<String, String>> smallCompaniesList = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchAndStoreAllOpinions();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _initializeData();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Future<void> _initializeData() async {
+    await _fetchUserWatchlist();
+    await fetchAndPopulateCompanyLists(widget.userId);
+    await _fetchAndStoreAllOpinions();
+  }
+
+  Future<void> fetchAndPopulateCompanyLists(String userId) async {
+    if (userWatchlist.isNotEmpty) {
+      final symbolsQuery = userWatchlist.join(',');
+      final url = 'http://10.0.2.2:8080/expandwatchlist?symbols=$symbolsQuery';
+
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          print('Fetched expanded watchlist: $data');
+
+          for (var company in data) {
+            final symbol = company['Value'][0];
+            final companyName = company['Value'][1];
+
+            setState(() {
+              bigCompaniesList.add({'symbol': symbol, 'companyName': companyName});
+              smallCompaniesList.add({'symbol': symbol, 'companyName': companyName});
+            });
+          }
+
+          print('Updated big companies: $bigCompaniesList');
+          print('Updated small companies: $smallCompaniesList');
+        } else {
+          print('Failed to fetch expanded watchlist: ${response.body}');
+        }
+      } catch (e) {
+        print('Error fetching expanded watchlist: $e');
+      }
+    } else {
+      print('User watchlist is empty');
+    }
+  }
+
+  Future<void> _fetchUserWatchlist() async {
+    final url = 'http://10.0.2.2:3000/get_watchlist?user_id=${widget.userId}';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data.containsKey('selected_companies')) {
+          setState(() {
+            userWatchlist = List<String>.from(
+              data['selected_companies'].map((company) => company['symbol']),
+            );
+          });
+        }
+        print('Fetched watchlist symbols: $userWatchlist');
+      } else {
+        print('Failed to fetch watchlist: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching watchlist: $e');
+    }
   }
 
   Future<void> _fetchAndStoreAllOpinions() async {
     List<Map<String, String>> fetchedOpinions = [];
 
     for (String ticker in bigCompaniesList.map((company) => company['symbol']!)) {
+      if (!mounted) return;
       try {
         final opinion = await fetchStockOpinion(ticker);
         if (opinion != null) {
@@ -83,42 +126,45 @@ final List<Map<String, String>> smallCompaniesList = [
       }
     }
 
-    setState(() {
-      stockOpinions = fetchedOpinions;
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        stockOpinions = fetchedOpinions;
+        isLoading = false;
+      });
+    }
   }
 
   Future<Map<String, String>?> fetchStockOpinion(String ticker) async {
-  final url = 'http://10.0.2.2:8080/stockopinion?ticker=$ticker';
+    final url = 'http://10.0.2.2:8080/stockopinion?ticker=$ticker';
 
-  try {
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-
-      if (data != null && data is Map<String, dynamic>) {
-        final summary = data['Summary'] ?? 'No summary available';
-        final opinion = data['Opinion'] ?? 'No opinion available';
-
-        return {
-          'Summary': summary,
-          'Opinion': opinion,
-        };
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data != null && data is Map<String, dynamic>) {
+          return {
+            'Summary': data['Summary'] ?? 'No summary available',
+            'Opinion': data['Opinion'] ?? 'No opinion available',
+          };
+        } else {
+          print('Unexpected data format received.');
+          return null;
+        }
       } else {
-        print('Unexpected data format received.');
+        print('Failed to fetch stock opinion: ${response.body}');
         return null;
       }
-    } else {
-      print('Failed to fetch stock opinion: ${response.body}');
+    } catch (e) {
+      print('Error fetching stock opinion: $e');
       return null;
     }
-  } catch (e) {
-    print('Error fetching stock opinion: $e');
-    return null;
   }
-}
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +236,7 @@ final List<Map<String, String>> smallCompaniesList = [
               _buildInsightCard(
                 context,
                 symbol: company['symbol']!,
-                companyName: company['companyName']!,
+                companyName: company['symbol']!,
                 isProfit: opinionData['Opinion'] == 'Strong Buy' || opinionData['Opinion'] == 'Buy',
                 consensus: opinionData['Opinion']!,
                 analysis: opinionData['Summary']!,
