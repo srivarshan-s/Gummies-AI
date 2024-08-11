@@ -73,6 +73,7 @@ prompt_recommendation = collection_gemini.find({"model": "recommendation"})[0]["
 client.close()
 app = FastAPI()
 
+
 @app.get("/get_recommendations")
 def get_recommendations(profile: str):
     global prompt_recommendation
@@ -96,12 +97,13 @@ def get_recommendations(profile: str):
             if num_hits <= 0:
                 return {"text": "ERROR"}
 
-@app.get('/get_projections')
-def get_projections(object_string:str):
+
+@app.get("/get_projections")
+def get_projections(object_string: str):
     global prompt_projection
-    values = eval(object_string['results'])
-    values = list(map(lambda x: str(x['v']), values))
-    values = '['+",".join(values)+']'
+    values = eval(object_string["results"])
+    values = list(map(lambda x: str(x["v"]), values))
+    values = "[" + ",".join(values) + "]"
 
     num_hits = len(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
@@ -122,6 +124,7 @@ def get_projections(object_string:str):
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
+
 
 @app.get("/autocorrect")
 def autocorrect(text: str):
@@ -144,6 +147,7 @@ def autocorrect(text: str):
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
+
 
 @app.get("/stockopinion")
 def stockOpinion(ticker: str):
@@ -189,6 +193,7 @@ def stockOpinion(ticker: str):
             if num_hits <= 0:
                 return {"text": "ERROR"}
 
+
 # News API Class
 class NewsAPI:
     def __init__(self, api_key=None):
@@ -233,6 +238,7 @@ class NewsAPI:
         news = self.clean_news(raw_news)
         return news
 
+
 # Beautify Class
 class Beautify:
     def __init__(self, gemini_api_key=None, prompts_dir="../prompts.json"):
@@ -267,6 +273,7 @@ class Beautify:
             )
         )
         return response.text
+
 
 # Main Class - Summarizer class
 class Summarizer:
@@ -307,6 +314,7 @@ class Summarizer:
     def get_highlights(self, query=None):
         news = self.news_api.get_highlights(query)
         return news
-    
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
