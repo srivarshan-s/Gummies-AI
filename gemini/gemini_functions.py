@@ -239,42 +239,6 @@ class NewsAPI:
         return news
 
 
-# Beautify Class
-class Beautify:
-    def __init__(self, gemini_api_key=None, prompts_dir="../prompts.json"):
-        self.news_api = NewsAPI()
-
-        # Load Gemini API key
-        if gemini_api_key is None:
-            self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        else:
-            self.gemini_api_key = gemini_api_key
-
-        # Load Prompts
-        self.load_prompts(prompts_dir)
-
-        # Configure Gemini API
-        genai.configure(api_key=self.gemini_api_key)
-
-    def load_prompts(self, prompts_dir):
-        try:
-            with open(prompts_dir) as f:
-                self.prompts_dict = json.load(f)
-        except Exception as e:
-            raise Exception(f"Error loading prompts: {e}")
-
-    def beautify_content(self, content_json, query="GENERAL_DESCRIPTION"):
-        description = content_json["description"]
-        company_name = content_json["company_name"]
-
-        response = self.gemini_model.generate_content(
-            self.prompts_dict[query].format(
-                DESCRIPTION=description, COMPANY_NAME=company_name
-            )
-        )
-        return response.text
-
-
 # Main Class - Summarizer class
 class Summarizer:
     prompts_dict = {}
