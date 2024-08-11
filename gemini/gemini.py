@@ -1,17 +1,11 @@
 import textwrap
 import google.generativeai as genai
-from IPython.display import Markdown
 import os
 from datetime import datetime
 import finnhub
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-
-
-def to_markdown(text):
-  text = text.replace('•', '  *')
-  return Markdown(textwrap.indent(text, '> ', predicate=lambda _: True))
 
 
 class Stocks:
