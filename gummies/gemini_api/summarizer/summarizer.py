@@ -48,6 +48,38 @@ class NewsAPI:
         news = self.clean_news(raw_news)
         return news
     
+# Beautify Class
+class Beautify:
+    def __init__(self,gemini_api_key=None,prompts_dir = "../prompts.json"):
+        self.news_api = NewsAPI()
+
+        # Load Gemini API key
+        if(gemini_api_key == None):
+            self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        else:
+            self.gemini_api_key = gemini_api_key
+
+        # Load Prompts
+        self.load_prompts(prompts_dir)
+
+        # Configure Gemini API
+        genai.configure(api_key=self.gemini_api_key)
+
+    def load_prompts(self,prompts_dir):
+        try:
+            with open(prompts_dir) as f:
+                self.prompts_dict = json.load(f)
+        except:
+            raise Exception("Error loading prompts")
+
+    def beautify_content(self,content_json,query="GENERAL_DESCRIPTION"):
+        description = content_json['description']
+        company_name = content_json['company_name']
+
+        response = self.gemini_model.generate_content(self.prompts_dict[query].format(DESCRIPTION=description,COMPANY_NAME=company_name))
+        return response.text
+
+
 # Main Class - Summarizer class
 class Summarizer:
     prompts_dict = {}
@@ -84,6 +116,36 @@ class Summarizer:
     def get_highlights(self,query=None):
         news = self.news_api.get_highlights(query)
         return news
+
+class Insights:
+
+    def __init__(self,gemini_api_key=None,prompts_dir = "../prompts.json"):
+        if(gemini_api_key == None):
+            self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        else:
+            self.gemini_api_key = gemini_api_key
+            
+        genai.configure(api_key=self.gemini_api_key)
+
+        self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+
+        self.load_prompts(prompts_dir)
+
+    def load_prompts(self,prompts_dir):
+        try:
+            with open(prompts_dir) as f:
+                self.prompts_dict = json.load(f)
+        except:
+            raise Exception("Error loading prompts")
+
+    def get_projections(self,values=[]):
+        values = list(map(str,values))
+        values = ','.join(values)
+        prompt = self.prompts_dict['PROJECTION']
+        prompt = prompt.format(STOCK_VALUES=values,TIMES=10)
+
+        response = self.gemini_model.generate_content(prompt)
+        return response.text
         
 ## Test Scripts
 
@@ -92,5 +154,9 @@ class Summarizer:
 from dotenv import load_dotenv
 load_dotenv('../../../.env')
 
-summarizer = Summarizer()
-print(summarizer.summarize_news('bitcoin'))
+# summarizer = Summarizer()
+# print(summarizer.summarize_news('bitcoin'))
+
+insights = Insights()
+print(insights.get_projections(values=[1,2,3,4,45,5,100,20,340]))
+                                

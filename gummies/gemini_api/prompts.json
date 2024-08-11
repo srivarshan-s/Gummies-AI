@@ -1,3 +1,10 @@
 {
-    "SUMMARIZE_PROMPT":"Here is the set of news articles about a particular company. Summarize them into important incidents and events that will affect the stock values of that company. here are the articles {ARTICLES}. I need the output format in the form of json"
+    "SUMMARIZE_PROMPT":"Here is the set of news articles about a particular company. Summarize them into important incidents and events that will affect the stock values of that company. here are the articles {ARTICLES}. I need the output format in the form of json",
+    "BEAUTIFY":{
+        "GENERAL_DESCRIPTION":"Here is a brief description of a company {COMPANY_NAME}, Provide a beautified and a concise version of the same. Make sure that the descritpion is on point. This is the description : {DESCRIPTION}. I need the output format in the form of json",
+        "MAIN_PRODUCTS_SERVICES":"Here is the details of the company {COMPANY_NAME}, Provide a beautified and a concise version of the main products, services and the company's primary target market of the company. Make sure that the description is on point. This is the description : {DESCRIPTION}. I need the output format in the form of json",
+        "FINANCIAL_PERFORMANCE":" Here is a brief overview of the company {COMPANY_NAME}'s financial performance and its growth strategy for the next 5 years. {DESCRIPTION} Provide a beautified and a concise version of the same. Make sure that the description is on point.I need the output format in the form of json",
+        "POTENTIAL_CHALLENGES":" Here are the potential risks or challenges the company {COMPANY_NAME} might face. Provide a beautified and a concise version of the same. Make sure that the description is on point. {DESCRIPTION}. I need the output format in the form of json"
+    },
+    "PROJECTION":"You are a Government Official of the Company X and you are responsible for handling stocks, Here is the previous stock price values for the Company X in a form of a list. {STOCK_VALUES}. Kindly provide the projected next {TIMES} values in a form a list. Make sure that you are providing ONLY THE STOCK VALUES BUT NOT ANY TEXT"
 }
