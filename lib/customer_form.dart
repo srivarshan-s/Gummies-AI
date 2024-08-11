@@ -463,7 +463,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             _typeAheadController.clear();
           },
           onSaved: (value) {
-            // You can process the selected companies here or during form submission
+            print('onSaved: $value');
           },
         ),
         const SizedBox(height: 20),
