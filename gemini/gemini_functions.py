@@ -100,7 +100,7 @@ def autocorrect(text: str):
 
 
 @app.get("/stockopinion")
-def stockOpinion(ticker):
+def stockOpinion(ticker: str):
     finnhub_client = finnhub.Client(api_key=FINNHUB_API_KEY)
     to_date = datetime.now()
     from_date = to_date - relativedelta(months=9)
