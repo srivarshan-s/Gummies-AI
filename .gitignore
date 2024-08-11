@@ -101,3 +101,6 @@ news_summary.txt
 
 # Python virtual environments
 */venv/
+*/__pycache__/
+
+server/graph.py
