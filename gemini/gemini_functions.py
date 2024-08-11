@@ -21,8 +21,8 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",  # Format the log messages
     handlers=[
         logging.FileHandler(
-            "autocorrect.log"
-        ),  # Log to a file named 'mongodb_connection.log'
+            "gemini.log"
+        ),
         logging.StreamHandler(),  # Also log to the console
     ],
 )
