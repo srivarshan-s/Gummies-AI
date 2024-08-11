@@ -1,22 +1,19 @@
+import json
 import logging
 import os
 import secrets
 import urllib.parse
-import json
-import uvicorn
-
+from datetime import datetime
 from io import StringIO
-import google.generativeai as genai
-
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 
 import finnhub
-from fastapi import FastAPI
+import google.generativeai as genai
 import requests
-
-from datetime import datetime
+import uvicorn
 from dateutil.relativedelta import relativedelta
+from fastapi import FastAPI
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 # Configure logging
 logging.basicConfig(
