@@ -60,7 +60,6 @@ def add_to_watchlist():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/get_watchlist', methods=['GET'])
 def get_watchlist():
     try:
@@ -77,7 +76,6 @@ def get_watchlist():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/get_user_data', methods=['GET'])
 def get_user_data():
     try:
@@ -93,7 +91,6 @@ def get_user_data():
         return jsonify(data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)

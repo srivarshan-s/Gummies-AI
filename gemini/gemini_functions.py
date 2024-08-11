@@ -54,11 +54,9 @@ collection_newsapi = db["news_api"]
 GEMINI_API_KEYS = [
     doc["key"] for doc in collection_gemini.find({}, {"_id": 0, "key": 1})
 ]
-
 FINNHUB_API_KEY = [
     doc["key"] for doc in collection_finnhub.find({}, {"_id": 0, "key": 1})
 ]
-
 NEWS_API_KEY = [doc["key"] for doc in collection_newsapi.find({}, {"_id": 0, "key": 1})]
 
 # Access the gummies database and prompts collection
@@ -67,16 +65,35 @@ collection_gemini = db["prompts"]
 
 # Retreive the prompt for autocorrection
 prompt_autocorrect = collection_gemini.find({"model": "autocorrect"})[0]["prompt"]
-
 prompt_stockOpinion = collection_gemini.find({"model": "stockOpinion"})[0]["prompt"]
-
 prompt_projection = collection_gemini.find({"model": "projection"})[0]["prompt"]
+prompt_recommendation = collection_gemini.find({"model": "recommendation"})[0]["prompt"]
 
 # Close the MongoDB connection
 client.close()
-
 app = FastAPI()
 
+@app.get("/get_recommendations")
+def get_recommendations(profile: str):
+    num_hits = len(GEMINI_API_KEYS)
+    while GEMINI_API_KEYS:
+        API_KEY = secrets.choice(GEMINI_API_KEYS)
+        prompt_recommendation = prompt_recommendation.format(DESCRIPTION=profile)
+        try:
+            genai.configure(api_key=API_KEY)
+            model = genai.GenerativeModel(
+                "gemini-1.5-flash",
+                system_instruction="",
+                generation_config={"response_mime_type": "application/json"},
+            )
+            response = model.generate_content(prompt_recommendation)
+            num_hits += 1
+            return json.loads(response.text)
+        except InvalidArgument as e:
+            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            num_hits -= 1
+            if num_hits <= 0:
+                return {"text": "ERROR"}
 
 @app.get('/get_projections')
 def get_projections(object_string:str):
@@ -92,10 +109,10 @@ def get_projections(object_string:str):
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
                 "gemini-1.5-flash",
-                system_instruction=prompt_projection,
+                system_instruction="",
                 generation_config={"response_mime_type": "application/json"},
             )
-            response = model.generate_content(values)
+            response = model.generate_content(prompt_projection)
             num_hits += 1
             return json.loads(response.text)
         except InvalidArgument as e:
@@ -114,10 +131,10 @@ def autocorrect(text: str):
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
                 model_name="gemini-1.5-flash",
-                system_instruction=prompt_autocorrect,
+                system_instruction="",
                 generation_config={"response_mime_type": "application/json"},
             )
-            response = model.generate_content(text)
+            response = model.generate_content(prompt_autocorrect)
             num_hits += 1
             return json.loads(response.text)
         except InvalidArgument as e:
@@ -125,7 +142,6 @@ def autocorrect(text: str):
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
-
 
 @app.get("/stockopinion")
 def stockOpinion(ticker: str):
@@ -171,7 +187,6 @@ def stockOpinion(ticker: str):
             if num_hits <= 0:
                 return {"text": "ERROR"}
 
-
 # News API Class
 class NewsAPI:
     def __init__(self, api_key=None):
@@ -216,7 +231,6 @@ class NewsAPI:
         news = self.clean_news(raw_news)
         return news
 
-
 # Beautify Class
 class Beautify:
     def __init__(self, gemini_api_key=None, prompts_dir="../prompts.json"):
@@ -251,7 +265,6 @@ class Beautify:
             )
         )
         return response.text
-
 
 # Main Class - Summarizer class
 class Summarizer:
@@ -292,36 +305,6 @@ class Summarizer:
     def get_highlights(self, query=None):
         news = self.news_api.get_highlights(query)
         return news
-
-
-class Insights:
-    def __init__(self, gemini_api_key=None, prompts_dir="../prompts.json"):
-        if gemini_api_key == None:
-            self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        else:
-            self.gemini_api_key = gemini_api_key
-
-        genai.configure(api_key=self.gemini_api_key)
-
-        self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
-        self.load_prompts(prompts_dir)
-
-    def load_prompts(self, prompts_dir):
-        try:
-            with open(prompts_dir) as f:
-                self.prompts_dict = json.load(f)
-        except:
-            raise Exception("Error loading prompts")
-
-    def get_projections(self, values=[]):
-        values = list(map(str, values))
-        values = ",".join(values)
-        prompt = self.prompts_dict["PROJECTION"]
-        prompt = prompt.format(STOCK_VALUES=values, TIMES=10)
-
-        response = self.gemini_model.generate_content(prompt)
-        return response.text
-
-
+    
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
