@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'startup_form.dart';
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 
 class StartupSignupPage extends StatefulWidget {
   @override
@@ -16,29 +18,78 @@ class _StartupSignupPageState extends State<StartupSignupPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
 
-  void _submit() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => StartupFormPage()),
-    );
+  final _auth = FirebaseAuth.instance;
+
+  void _submit() async{
     if (_formKey.currentState!.validate()) {
-      // Handle signup with valid inputs
       String companyName = _companyNameController.text;
       String companyEmail = _companyEmailController.text;
       String password = _passwordController.text;
 
-      // Implement your signup logic here
-      // For now, just print the input values
-      print('Company Name: $companyName');
-      print('Company Email: $companyEmail');
-      print('Password: $password');
+      _formKey.currentState!.save();
+    try {
+      // Store company in Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: companyEmail,
+        password: password,
+      );
+      print('Sign-up successful: ${userCredential.user}');
 
-      // Simulate successful signup
+      // Store company details in MongoDB
+      final mongoDBCompanyId = await _storeCompanyInMongoDB(
+          companyName, companyEmail, userCredential.user!.uid);
+
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Signup successful')),
       );
+
+      // Navigate to the next page (e.g., a form for additional company details)
+      Navigator.pushNamed(
+        context,
+        '/customer_form',
+        arguments: mongoDBCompanyId,
+      );
+    } on FirebaseAuthException catch (e) {
+      // Handle sign-up error
+      print('Sign-up failed: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign-up failed: ${e.message}')),
+      );
+    }
     }
   }
+
+  Future<String> _storeCompanyInMongoDB(String companyName, String companyEmail, String uid) async {
+  // Prepare the company data
+  final companyData = {
+    'companyName': companyName,
+    'companyEmail': companyEmail,
+    'firebaseUid': uid,
+    'createdAt': DateTime.now().toIso8601String(),
+  };
+
+  // Replace with your MongoDB API endpoint
+  final url = 'http://10.0.2.2:5000/store_company';
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(companyData),
+    );
+
+    if (response.statusCode == 201) {
+      final data = json.decode(response.body);
+      return data['id']; 
+    } else {
+      throw Exception('Failed to store company in MongoDB');
+    }
+  } catch (e) {
+    print('Error storing company in MongoDB: $e');
+    throw e;
+  }
+}
 
   String? _validateCompanyName(String? value) {
     if (value == null || value.isEmpty) {

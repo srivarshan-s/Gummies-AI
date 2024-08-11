@@ -25,6 +25,7 @@ client = MongoClient(uri, server_api=ServerApi('1'), tlsCAFile=certifi.where())
 
 db = client['gummies']
 user_collection = db['users']
+company_collection = db['startups']
 watchlist_collection = db['watchlist']
 
 matplotlib.use('Agg')
@@ -60,7 +61,7 @@ def search():
         }
 
         for item in result.get('result', []):
-            if '.' not in item.get('name', ''):
+            if '.' not in item.get('symbol', ''):
                 filtered_result['result'].append(item)
 
         filtered_result['count'] = len(filtered_result['result'])
@@ -146,6 +147,18 @@ def store_user():
         print(result.inserted_id)
         user_id = str(result.inserted_id)
         return jsonify({'id': user_id}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@ app.route('/store_company', methods=['POST'])
+def store_company():
+    try:
+        data = request.json
+        result = company_collection.insert_one(data)
+        print(result.inserted_id)
+        company_id = str(result.inserted_id)
+        return jsonify({'id': company_id}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

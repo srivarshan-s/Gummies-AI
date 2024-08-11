@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class InsightsPage extends StatefulWidget {
   @override
@@ -10,10 +12,35 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
   int? _expandedIndex;
   late AnimationController _controller;
   late Animation<double> _animation;
+  List<Map<String, String>> stockOpinions = [];
+  bool isLoading = true;
+
+  final List<Map<String, String>> bigCompaniesList = [
+  {
+    'symbol': 'AAPL',
+    'companyName': 'Apple Inc.',
+  },
+  {
+    'symbol': 'GOOGL',
+    'companyName': 'Alphabet Inc.',
+  },
+];
+
+final List<Map<String, String>> smallCompaniesList = [
+  {
+    'symbol': 'AAPL',
+    'companyName': 'Apple Inc.',
+  },
+  {
+    'symbol': 'GOOGL',
+    'companyName': 'Alphabet Inc.',
+  },
+];
 
   @override
   void initState() {
     super.initState();
+    _fetchAndStoreAllOpinions();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -26,6 +53,72 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
     _controller.dispose();
     super.dispose();
   }
+
+  Future<void> _fetchAndStoreAllOpinions() async {
+    List<Map<String, String>> fetchedOpinions = [];
+
+    for (String ticker in bigCompaniesList.map((company) => company['symbol']!)) {
+      try {
+        final opinion = await fetchStockOpinion(ticker);
+        if (opinion != null) {
+          fetchedOpinions.add({
+            'ticker': ticker,
+            'Summary': opinion['Summary']!,
+            'Opinion': opinion['Opinion']!,
+          });
+        } else {
+          fetchedOpinions.add({
+            'ticker': ticker,
+            'Summary': 'No summary available',
+            'Opinion': 'No opinion available',
+          });
+        }
+      } catch (e) {
+        print('Error fetching opinion for $ticker: $e');
+        fetchedOpinions.add({
+          'ticker': ticker,
+          'Summary': 'Failed to fetch opinion',
+          'Opinion': 'Error',
+        });
+      }
+    }
+
+    setState(() {
+      stockOpinions = fetchedOpinions;
+      isLoading = false;
+    });
+  }
+
+  Future<Map<String, String>?> fetchStockOpinion(String ticker) async {
+  final url = 'http://10.0.2.2:8080/stockopinion?ticker=$ticker';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+
+      if (data != null && data is Map<String, dynamic>) {
+        final summary = data['Summary'] ?? 'No summary available';
+        final opinion = data['Opinion'] ?? 'No opinion available';
+
+        return {
+          'Summary': summary,
+          'Opinion': opinion,
+        };
+      } else {
+        print('Unexpected data format received.');
+        return null;
+      }
+    } else {
+      print('Failed to fetch stock opinion: ${response.body}');
+      return null;
+    }
+  } catch (e) {
+    print('Error fetching stock opinion: $e');
+    return null;
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -52,55 +145,64 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
           ),
         ),
 
-
         body: Container(
           decoration: BoxDecoration(
             color: Color(0xFF131314),
           ),
-          child: TabBarView(
-            children: [
-              _buildCompanyList(bigCompanies: true),
-              _buildCompanyList(bigCompanies: false),
-            ],
-          ),
+          child: isLoading
+              ? Center(child: CircularProgressIndicator()) // Show loading indicator while fetching data
+              : TabBarView(
+                  children: [
+                    _buildCompanyList(bigCompanies: true),
+                    _buildCompanyList(bigCompanies: false),
+                  ],
+                ),
         ),
+        
       ),
     );
   }
 
   Widget _buildCompanyList({required bool bigCompanies}) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          const Text(
-            'Stocks to watch',
-            style: TextStyle(
-              color: Color.fromRGBO(182, 109, 164, 1),
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+  final companies = bigCompanies ? bigCompaniesList : smallCompaniesList;
+
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      children: [
+        const Text(
+          'Stocks to watch',
+          style: TextStyle(
+            color: Color.fromRGBO(182, 109, 164, 1),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
           ),
-          const SizedBox(height: 20),
-          _buildInsightCard(
-            context,
-            symbol: bigCompanies ? 'AAPL' : 'SMALL1',
-            companyName: bigCompanies ? 'Apple Inc.' : 'Small Cap Co.',
-            isProfit: true,
-            consensus: 'Strong Buy',
-          ),
-          const SizedBox(height: 20),
-          _buildInsightCard(
-            context,
-            symbol: bigCompanies ? 'GOOGL' : 'SMALL2',
-            companyName: bigCompanies ? 'Alphabet Inc.' : 'Small Tech Co.',
-            isProfit: false,
-            consensus: 'Buy',
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 20),
+        ...companies.map((company) {
+          final opinionData = stockOpinions.firstWhere(
+            (opinion) => opinion['ticker'] == company['symbol'],
+            orElse: () => {'Summary': 'No summary available', 'Opinion': 'N/A'},
+          );
+
+          return Column(
+            children: [
+              _buildInsightCard(
+                context,
+                symbol: company['symbol']!,
+                companyName: company['companyName']!,
+                isProfit: opinionData['Opinion'] == 'Strong Buy' || opinionData['Opinion'] == 'Buy',
+                consensus: opinionData['Opinion']!,
+                analysis: opinionData['Summary']!,
+              ),
+              const SizedBox(height: 20),
+            ],
+          );
+        }).toList(),
+      ],
+    ),
+  );
+}
 
   Widget _buildInsightCard(
       BuildContext context, {
@@ -108,6 +210,7 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
         required String companyName,
         required bool isProfit,
         required String consensus,
+        required String analysis,
       }) {
     bool isExpanded = _expandedIndex == symbol.hashCode;
 
@@ -132,7 +235,7 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
           borderRadius: BorderRadius.circular(30),
         ),
         child: isExpanded
-            ? _buildExpandedContent(companyName, symbol, isProfit, consensus)
+            ? _buildExpandedContent(companyName, symbol, isProfit, consensus, analysis)
             : _buildCollapsedContent(symbol, companyName, isProfit, consensus),
       ),
     );
@@ -198,6 +301,7 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
       String symbol,
       bool isProfit,
       String consensus,
+      String analysis,
       ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +368,7 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
         ),
         SizedBox(height: 10),
         Text(
-          '$companyName is showing strong financial performance with a promising growth trajectory, making it a strong buy recommendation.',
+          analysis,
           style: TextStyle(
             color: Colors.white60,
             fontSize: 14,

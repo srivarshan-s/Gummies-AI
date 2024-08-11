@@ -235,7 +235,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
   }
 
   Widget _buildtrendPage() {
-    return TrendsPage(); // Defined in discover.dart
+    return TrendsPage(userId: userId!); // Defined in discover.dart
   }
 
   Widget _buildInsightsPage() {
