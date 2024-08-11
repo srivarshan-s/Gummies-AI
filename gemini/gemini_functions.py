@@ -198,12 +198,12 @@ def stockOpinion(ticker: str):
 
 
 @app.get("/expandwatchlist")
-def expandWatchlist():
-    response = requests.get("http://localhost:5000/get_watchlist")
-    response.raise_for_status()  # Ensure that the request was successful
-    watchlist = response.json()  # Use the .json() method to parse the response JSON
+def expandWatchlist(symbols):
+    # response = requests.get("http://localhost:5000/get_watchlist?user_id=")
+    # response.raise_for_status()  # Ensure that the request was successful
+    # watchlist = response.json()  # Use the .json() method to parse the response JSON
 
-    symbols = [company["symbol"] for company in watchlist.get("selected_companies", [])]
+    # symbols = [company["symbol"] for company in watchlist.get("selected_companies", [])]
 
     num_hits = len(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
