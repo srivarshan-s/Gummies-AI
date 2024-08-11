@@ -1,8 +1,10 @@
 import json
+from json import JSONDecodeError
 import logging
 import os
 import secrets
 import urllib.parse
+import certifi
 from datetime import datetime
 from io import StringIO
 
@@ -19,8 +21,10 @@ from pymongo.server_api import ServerApi
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,  # Set the logging level to INFO (you can change this to DEBUG, ERROR, etc.)
-    format="%(asctime)s - %(levelname)s - %(message)s",  # Format the log messages
+    # Set the logging level to INFO (you can change this to DEBUG, ERROR, etc.)
+    level=logging.INFO,
+    # Format the log messages
+    format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.FileHandler("gemini.log"),
         logging.StreamHandler(),  # Also log to the console
@@ -35,7 +39,7 @@ MONGO_PSWD = urllib.parse.quote_plus(os.environ["MONGO_PSWD"])
 uri = f"mongodb+srv://{MONGO_USNM}:{MONGO_PSWD}@cluster0.v2avpdc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 # Create a new client and connect to the server
-client = MongoClient(uri, server_api=ServerApi("1"))
+client = MongoClient(uri, server_api=ServerApi("1"), tlsCAFile=certifi.where())
 
 try:
     client.admin.command("ping")
@@ -57,17 +61,22 @@ GEMINI_API_KEYS = [
 FINNHUB_API_KEY = [
     doc["key"] for doc in collection_finnhub.find({}, {"_id": 0, "key": 1})
 ]
-NEWS_API_KEY = [doc["key"] for doc in collection_newsapi.find({}, {"_id": 0, "key": 1})]
+NEWS_API_KEY = [doc["key"]
+                for doc in collection_newsapi.find({}, {"_id": 0, "key": 1})]
 
 # Access the gummies database and prompts collection
 db = client["gummies"]
 collection_gemini = db["prompts"]
 
 # Retreive the prompt for autocorrection
-prompt_autocorrect = collection_gemini.find({"model": "autocorrect"})[0]["prompt"]
-prompt_stockOpinion = collection_gemini.find({"model": "stockOpinion"})[0]["prompt"]
-prompt_projection = collection_gemini.find({"model": "projection"})[0]["prompt"]
-prompt_recommendation = collection_gemini.find({"model": "recommendation"})[0]["prompt"]
+prompt_autocorrect = collection_gemini.find(
+    {"model": "autocorrect"})[0]["prompt"]
+prompt_stockOpinion = collection_gemini.find(
+    {"model": "stockOpinion"})[0]["prompt"]
+prompt_projection = collection_gemini.find(
+    {"model": "projection"})[0]["prompt"]
+prompt_recommendation = collection_gemini.find(
+    {"model": "recommendation"})[0]["prompt"]
 prompt_expandWatchlist = collection_gemini.find({"model": "expandWatchlist"})[0][
     "prompt"
 ]
@@ -83,7 +92,8 @@ def get_recommendations(profile: str):
     num_hits = len(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
-        prompt_recommendation = prompt_recommendation.format(DESCRIPTION=profile)
+        prompt_recommendation = prompt_recommendation.format(
+            DESCRIPTION=profile)
         try:
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
@@ -95,7 +105,8 @@ def get_recommendations(profile: str):
             num_hits += 1
             return json.loads(response.text)
         except InvalidArgument as e:
-            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            logging.warning(
+                f"Model cannot generate with API key {API_KEY}: {e}")
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
@@ -112,7 +123,8 @@ def get_projections(object_string: str):
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
         try:
-            prompt_projection = prompt_projection.format(STOCK_VALUES=values, TIMES=10)
+            prompt_projection = prompt_projection.format(
+                STOCK_VALUES=values, TIMES=10)
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
                 "gemini-1.5-flash",
@@ -123,7 +135,8 @@ def get_projections(object_string: str):
             num_hits += 1
             return json.loads(response.text)
         except InvalidArgument as e:
-            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            logging.warning(
+                f"Model cannot generate with API key {API_KEY}: {e}")
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
@@ -146,7 +159,8 @@ def autocorrect(text: str):
             num_hits += 1
             return json.loads(response.text)
         except InvalidArgument as e:
-            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            logging.warning(
+                f"Model cannot generate with API key {API_KEY}: {e}")
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
@@ -163,7 +177,8 @@ def stockOpinion(ticker: str):
     from_date_str = from_date.strftime("%Y-%m-%d")
 
     output = StringIO()
-    articles = finnhub_client.company_news(ticker, _from=from_date_str, to=to_date_str)
+    articles = finnhub_client.company_news(
+        ticker, _from=from_date_str, to=to_date_str)
 
     for article in articles:
         output.write(article["headline"])
@@ -191,7 +206,8 @@ def stockOpinion(ticker: str):
             return json.loads(response.text)
 
         except InvalidArgument as e:
-            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            logging.warning(
+                f"Model cannot generate with API key {API_KEY}: {e}")
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
@@ -199,7 +215,7 @@ def stockOpinion(ticker: str):
 
 @app.get("/expandwatchlist")
 def expandWatchlist(symbols):
-    # response = requests.get("http://localhost:5000/get_watchlist?user_id=")
+    # response = requests.get("http://localhost:3000/get_watchlist?user_id=")
     # response.raise_for_status()  # Ensure that the request was successful
     # watchlist = response.json()  # Use the .json() method to parse the response JSON
 
@@ -217,14 +233,19 @@ def expandWatchlist(symbols):
             )
             response = model.generate_content(symbols)
             num_hits += 1
-
             return json.loads(response.text)
 
         except InvalidArgument as e:
-            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            logging.warning(
+                f"Model cannot generate with API key {API_KEY}: {e}")
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
+
+        except JSONDecodeError as e:
+            logging.warning(
+                f"JSON Error: {e}")
+            return {"text": "JSONERROR"}
 
 
 # News API Classgem
@@ -303,7 +324,8 @@ class Summarizer:
 
         # Call Gemini API
         response = self.gemini_model.generate_content(
-            self.prompts_dict["SUMMARIZE_PROMPT"].format(ARTICLES=article_contents)
+            self.prompts_dict["SUMMARIZE_PROMPT"].format(
+                ARTICLES=article_contents)
         )
 
         return response.text
