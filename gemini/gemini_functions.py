@@ -134,10 +134,10 @@ def autocorrect(text: str):
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
                 model_name="gemini-1.5-flash",
-                system_instruction="",
+                system_instruction=prompt_autocorrect,
                 generation_config={"response_mime_type": "application/json"},
             )
-            response = model.generate_content(prompt_autocorrect)
+            response = model.generate_content(text)
             num_hits += 1
             return json.loads(response.text)
         except InvalidArgument as e:
