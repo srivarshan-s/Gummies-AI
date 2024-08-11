@@ -37,7 +37,9 @@ class MyApp extends StatelessWidget {
         '/news': (context) => StockMarketNewsPage(),
         '/profile': (context) => ProfilePage(),
         '/watchlist': (context) => WatchlistPage(),
-        '/trend': (context) => TrendsPage(),
+        '/trend': (context) => TrendsPage(
+              userId: '',
+            ),
       },
     );
   }
