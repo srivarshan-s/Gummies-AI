@@ -274,7 +274,7 @@ class Summarizer:
         self.news_api = NewsAPI()
 
         # Load Gemini API key
-        if gemini_api_key == None:
+        if gemini_api_key is None:
             self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         else:
             self.gemini_api_key = gemini_api_key
