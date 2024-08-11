@@ -11,6 +11,7 @@ import google.generativeai as genai
 import requests
 import uvicorn
 from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from google.api_core.exceptions import InvalidArgument  # Exception Handling
 from pymongo.mongo_client import MongoClient
@@ -27,6 +28,7 @@ logging.basicConfig(
 )
 
 # Get MongoDB username and password from environment variables
+load_dotenv()
 MONGO_USNM = urllib.parse.quote_plus(os.environ["MONGO_USNM"])
 MONGO_PSWD = urllib.parse.quote_plus(os.environ["MONGO_PSWD"])
 
