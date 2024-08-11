@@ -99,7 +99,7 @@ def autocorrect(text: str):
                 return {"text": "ERROR"}
 
 
-@app.get("/stockOpinion")
+@app.get("/stockopinion")
 def stockOpinion(ticker):
     finnhub_client = finnhub.Client(api_key=FINNHUB_API_KEY)
     to_date = datetime.now()
