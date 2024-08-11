@@ -1,0 +1,145 @@
+import logging
+import os
+import secrets
+import urllib.parse
+import json
+import uvicorn
+
+from io import StringIO
+import google.generativeai as genai
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+
+import finnhub
+from fastapi import FastAPI
+
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Set the logging level to INFO (you can change this to DEBUG, ERROR, etc.)
+    format="%(asctime)s - %(levelname)s - %(message)s",  # Format the log messages
+    handlers=[
+        logging.FileHandler(
+            "autocorrect.log"
+        ),  # Log to a file named 'mongodb_connection.log'
+        logging.StreamHandler(),  # Also log to the console
+    ],
+)
+
+# Get MongoDB username and password from environment variables
+MONGO_USNM = urllib.parse.quote_plus(os.environ["MONGO_USNM"])
+MONGO_PSWD = urllib.parse.quote_plus(os.environ["MONGO_PSWD"])
+
+uri = f"mongodb+srv://{MONGO_USNM}:{MONGO_PSWD}@cluster0.v2avpdc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+# Create a new client and connect to the server
+client = MongoClient(uri, server_api=ServerApi("1"))
+
+try:
+    client.admin.command("ping")
+    logging.info("Successfully connected to MongoDB!")
+except Exception as err:
+    logging.error(f"An error occurred: {err}")
+    exit(0)
+
+# Access the api_keys database and gemini collection
+db = client["api_keys"]
+collection_gemini = db["gemini"]
+collection_finnhub = db["finnhub"]
+
+
+# Retrieve all documents and extract the API keys
+GEMINI_API_KEYS = [doc["key"] for doc in collection_gemini.find({}, {"_id": 0, "key": 1})]
+
+FINNHUB_API_KEYS = [doc["key"] for doc in collection_finnhub.find({}, {"_id": 0, "key": 1})]
+
+# Access the gummies database and prompts collection
+db = client["gummies"]
+collection_gemini = db["prompts"]
+
+# Retreive the prompt for autocorrection
+prompt_autocorrect = collection_gemini.find({"model": "autocorrect"})[0]["prompt"]
+
+prompt_stockOpinion = collection_gemini.find({"model": "stockOpinion"})[0]["prompt"]
+
+# Close the MongoDB connection
+client.close()
+
+app = FastAPI()
+
+
+@app.get("/autocorrect")
+def autocorrect(text: str):
+    # Set upper-bound to stop hitting random API keys
+    num_hits = len(GEMINI_API_KEYS)
+    print(GEMINI_API_KEYS)
+    while GEMINI_API_KEYS:
+        API_KEY = secrets.choice(GEMINI_API_KEYS)
+        try:
+            genai.configure(api_key=API_KEY)
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=prompt_autocorrect,
+                generation_config={"response_mime_type": "application/json"},
+            )
+            response = model.generate_content(text)
+            num_hits += 1
+            return json.load(response.text)
+        except Exception as e:
+            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            num_hits -= 1
+            if num_hits <= 0:
+                return {"text": "ERROR"}
+            
+
+@app.get("/stockOpinion")
+def stockOpinion(self, ticker):
+    num_hits = len(GEMINI_API_KEYS)
+    print(GEMINI_API_KEYS)
+    while GEMINI_API_KEYS:
+        API_KEY = secrets.choice(GEMINI_API_KEYS)
+        try:
+            genai.configure(api_key=API_KEY)
+            self.finnhub_client = finnhub.Client(api_key=self.FINNHUB_API_KEY)
+            model = genai.GenerativeModel(
+            'gemini-1.5-flash', 
+            system_instruction=prompt_stockOpinion, generation_config={"response_mime_type": "application/json"})
+            
+            to_date = datetime.now()
+
+            from_date = to_date - relativedelta(months=9)
+
+            # Format the dates
+            to_date_str = to_date.strftime("%Y-%m-%d")
+            from_date_str = from_date.strftime("%Y-%m-%d")
+
+            output = StringIO()
+            articles = self.finnhub_client.company_news(ticker, _from=from_date_str, to=to_date_str)                
+                
+            for article in articles:
+                output.write(article['headline'])
+                output.write('\n')
+                output.write(article['summary'])
+                date = datetime.fromtimestamp(article['datetime'])
+                output.write(f'\nPublished on {date.strftime("%Y-%m-%d")}\n\n')
+                output.write('\n')
+
+
+            news = output.getvalue()
+
+            return model.generate_content(news)
+
+        except Exception as e:
+            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            num_hits -= 1
+            if num_hits <= 0:
+                return {"text": "ERROR"}
+		
+
+
+
+if __name__ == "__main__":
+
+    uvicorn.run(app, host="0.0.0.0", port=8080)

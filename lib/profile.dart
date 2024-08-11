@@ -10,6 +10,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String? userId;
   Map<String, dynamic>? userData;
+  bool _isEditing = false; // State variable to toggle between view and edit mode
 
   @override
   void initState() {
@@ -48,6 +49,28 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void _toggleEditMode() {
+    setState(() {
+      _isEditing = !_isEditing;
+    });
+  }
+
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      // Implement form submission logic
+      print('Profile updated: ${userData!['firstName']} ${userData!['lastName']}, ${userData!['email']}');
+      _toggleEditMode();
+    }
+  }
+
+  void _updateProfilePicture() {
+    // Implement functionality to update the profile picture
+    print('Update profile picture');
+  }
+
+  final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,59 +81,261 @@ class _ProfilePageState extends State<ProfilePage> {
       body: userId == null || userData == null
           ? Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: 20),
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage:
-                        NetworkImage(userData!['profileImageUrl'] ?? ''),
-                    backgroundColor: Colors.grey[200],
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    userData!['displayName'] ?? 'Name not available',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    userData!['email'] ?? 'Email not available',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'User ID: $userId',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Divider(color: Colors.white60),
-                  SizedBox(height: 20),
-                  Text(
-                    'Additional Details',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  // Additional details can be displayed here
-                ],
+        padding: const EdgeInsets.all(16.0),
+        child: _isEditing ? _buildEditForm() : _buildProfileView(),
+      ),
+      backgroundColor: Color(0xFF131314),
+    );
+  }
+
+  Widget _buildProfileView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(height: 20),
+        Stack(
+          children: [
+            Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                  image: AssetImage('assets/dummy_profilePic.png'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: CircleAvatar(
+                radius: 100,
+                backgroundImage: NetworkImage(userData!['profileImageUrl'] ?? ''),
+                backgroundColor: Colors.transparent,
               ),
             ),
-      backgroundColor: Color(0xFF131314),
+            // Positioned(
+            //   bottom: 0,
+            //   right: 0,
+            //   child: IconButton(
+            //     icon: Icon(Icons.camera_alt, color: Colors.white),
+            //     onPressed: _updateProfilePicture,
+            //   ),
+            // ),
+          ],
+        ),
+        SizedBox(height: 20),
+        Text(
+          userData!['displayName'] ?? 'Name not available',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Color.fromRGBO(182, 109, 164, 1),
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          userData!['email'] ?? 'Email not available',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.white70,
+          ),
+        ),
+        SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: _toggleEditMode,
+          child: Text('Edit Profile'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF1e1f20),
+            foregroundColor: Colors.white,
+          ),
+        ),
+        SizedBox(height: 20),
+        Divider(color: Color.fromRGBO(182, 109, 164, 1)),
+        SizedBox(height: 20),
+        _buildPortfolioDetails(),
+      ],
+    );
+  }
+
+  Widget _buildEditForm() {
+    return Form(
+      key: _formKey,
+      child: ListView(
+        children: [
+        GestureDetector(
+        onTap: _updateProfilePicture,
+        child: Column(
+        children: [
+        Center(
+        child: Stack(
+        children: [
+        Container(
+        width: 200,
+        height: 200,
+        decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        image: DecorationImage(
+        image: AssetImage('assets/dummy_profilePic.png'),
+    fit: BoxFit.cover,
+    ),
+    ),
+    child: CircleAvatar(
+    radius: 100,
+    backgroundImage: NetworkImage(userData!['profileImageUrl'] ?? ''),
+    backgroundColor: Colors.transparent,
+    ),
+    ),
+    Positioned(
+    bottom: 0,
+    right: -13,
+    child: IconButton(
+    icon: Icon(Icons.camera_alt, color: Colors.white),
+    onPressed: _updateProfilePicture,
+    ),
+    ),
+    ],
+    ),
+    ),
+    ],
+    ),
+        ),
+
+          SizedBox(height: 20),
+          TextFormField(
+            initialValue: userData!['firstName'] ?? '',
+            decoration: InputDecoration(
+              labelText: 'First Name',
+              labelStyle: TextStyle(color: Colors.white),
+              filled: true,
+              fillColor: Color(0xFF1e1f20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Colors.white60),
+              ),
+            ),
+            style: TextStyle(color: Colors.white),
+            onSaved: (value) => userData!['firstName'] = value!,
+          ),
+          SizedBox(height: 20),
+          TextFormField(
+            initialValue: userData!['lastName'] ?? '',
+            decoration: InputDecoration(
+              labelText: 'Last Name',
+              labelStyle: TextStyle(color: Colors.white),
+              filled: true,
+              fillColor: Color(0xFF1e1f20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Colors.white60),
+              ),
+            ),
+            style: TextStyle(color: Colors.white),
+            onSaved: (value) => userData!['lastName'] = value!,
+          ),
+          SizedBox(height: 20),
+          TextFormField(
+            initialValue: userData!['email'] ?? '',
+            decoration: InputDecoration(
+              labelText: 'Email',
+              labelStyle: TextStyle(color: Colors.white),
+              filled: true,
+              fillColor: Color(0xFF1e1f20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Colors.white60),
+              ),
+            ),
+            style: TextStyle(color: Colors.white),
+            onSaved: (value) => userData!['email'] = value!,
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _submitForm,
+            child: Text('Submit'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF1e1f20),
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPortfolioDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Total Portfolio Value:',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '\$${userData!['portfolioValue'] ?? 'N/A'}',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.white70,
+          ),
+        ),
+        SizedBox(height: 20),
+        Text(
+          'Current Holdings:',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          userData!['currentHoldings'] ?? 'No holdings available',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.white70,
+          ),
+        ),
+        SizedBox(height: 20),
+        Text(
+          'Investment Performance:',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          userData!['investmentPerformance'] ?? 'No performance data available',
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.white70,
+          ),
+        ),
+      ],
     );
   }
 }

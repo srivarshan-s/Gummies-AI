@@ -9,6 +9,7 @@ import 'news.dart';
 import 'startup_form.dart';
 import 'profile.dart';
 import 'watchlist.dart';
+import 'trend.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
         '/news': (context) => StockMarketNewsPage(),
         '/profile': (context) => ProfilePage(),
         '/watchlist': (context) => WatchlistPage(),
+        '/trend': (context) => TrendsPage(),
       },
     );
   }
