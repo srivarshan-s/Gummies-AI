@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'choice.dart'; // Import the choice.dart file
-import 'login.dart'; // Import the login.dart.file
+import 'choice.dart';
+import 'login.dart';
 import 'customer_signup.dart';
 import 'startup_signup.dart';
 import 'customer_form.dart';
@@ -10,6 +10,7 @@ import 'startup_form.dart';
 import 'profile.dart';
 import 'watchlist.dart';
 import 'trend.dart';
+import 'insights.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => ProfilePage(),
         '/watchlist': (context) => WatchlistPage(),
         '/trend': (context) => TrendsPage(),
+        '/insights': (context) => InsightsPage(),
       },
     );
   }

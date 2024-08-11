@@ -8,6 +8,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  bool _isHoveringSubmit = false;
   String? userId;
   Map<String, dynamic>? userData;
   bool _isEditing = false; // State variable to toggle between view and edit mode
@@ -69,6 +70,10 @@ class _ProfilePageState extends State<ProfilePage> {
     print('Update profile picture');
   }
 
+  void _logout() {
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -111,14 +116,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 backgroundColor: Colors.transparent,
               ),
             ),
-            // Positioned(
-            //   bottom: 0,
-            //   right: 0,
-            //   child: IconButton(
-            //     icon: Icon(Icons.camera_alt, color: Colors.white),
-            //     onPressed: _updateProfilePicture,
-            //   ),
-            // ),
           ],
         ),
         SizedBox(height: 20),
@@ -138,19 +135,64 @@ class _ProfilePageState extends State<ProfilePage> {
             color: Colors.white70,
           ),
         ),
-        SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: _toggleEditMode,
-          child: Text('Edit Profile'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF1e1f20),
-            foregroundColor: Colors.white,
+        SizedBox(height: 20),
+        MouseRegion(
+          onEnter: (_) => setState(() {
+            _isHoveringSubmit = true;
+          }),
+          onExit: (_) => setState(() {
+            _isHoveringSubmit = false;
+          }),
+          child: ElevatedButton(
+            onPressed: _toggleEditMode,
+            style: ElevatedButton.styleFrom(
+              padding:
+              EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              backgroundColor:
+              _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
+              foregroundColor: Colors.white,
+              textStyle: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: Text('Edit Profile'),
           ),
         ),
         SizedBox(height: 20),
         Divider(color: Color.fromRGBO(182, 109, 164, 1)),
         SizedBox(height: 20),
         _buildPortfolioDetails(),
+        SizedBox(height: 20),
+        MouseRegion(
+          onEnter: (_) => setState(() {
+            _isHoveringSubmit = true;
+          }),
+          onExit: (_) => setState(() {
+            _isHoveringSubmit = false;
+          }),
+          child: ElevatedButton(
+            onPressed: _logout,
+            style: ElevatedButton.styleFrom(
+              padding:
+              EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              backgroundColor:
+              _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
+              foregroundColor: Colors.white,
+              textStyle: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: Text('Logout'),
+          ),
+        ),
       ],
     );
   }
@@ -160,44 +202,43 @@ class _ProfilePageState extends State<ProfilePage> {
       key: _formKey,
       child: ListView(
         children: [
-        GestureDetector(
-        onTap: _updateProfilePicture,
-        child: Column(
-        children: [
-        Center(
-        child: Stack(
-        children: [
-        Container(
-        width: 200,
-        height: 200,
-        decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        image: DecorationImage(
-        image: AssetImage('assets/dummy_profilePic.png'),
-    fit: BoxFit.cover,
-    ),
-    ),
-    child: CircleAvatar(
-    radius: 100,
-    backgroundImage: NetworkImage(userData!['profileImageUrl'] ?? ''),
-    backgroundColor: Colors.transparent,
-    ),
-    ),
-    Positioned(
-    bottom: 0,
-    right: -13,
-    child: IconButton(
-    icon: Icon(Icons.camera_alt, color: Colors.white),
-    onPressed: _updateProfilePicture,
-    ),
-    ),
-    ],
-    ),
-    ),
-    ],
-    ),
-        ),
-
+          GestureDetector(
+            onTap: _updateProfilePicture,
+            child: Column(
+              children: [
+                Center(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: AssetImage('assets/dummy_profilePic.png'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          radius: 100,
+                          backgroundImage: NetworkImage(userData!['profileImageUrl'] ?? ''),
+                          backgroundColor: Colors.transparent,
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: -13,
+                        child: IconButton(
+                          icon: Icon(Icons.camera_alt, color: Colors.white),
+                          onPressed: _updateProfilePicture,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           SizedBox(height: 20),
           TextFormField(
             initialValue: userData!['firstName'] ?? '',
@@ -268,12 +309,34 @@ class _ProfilePageState extends State<ProfilePage> {
             onSaved: (value) => userData!['email'] = value!,
           ),
           SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _submitForm,
-            child: Text('Submit'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF1e1f20),
-              foregroundColor: Colors.white,
+          MouseRegion(
+            onEnter: (_) => setState(() {
+              _isHoveringSubmit = true;
+            }),
+            onExit: (_) => setState(() {
+              _isHoveringSubmit = false;
+            }),
+            child: ElevatedButton(
+              // onPressed: () {
+              //   Navigator.pushNamed(context,
+              //       '/customer_form'); // Navigate to Sign Up Page
+              // },
+              onPressed: _submitForm,
+              style: ElevatedButton.styleFrom(
+                padding:
+                EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                backgroundColor:
+                _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
+                foregroundColor: Colors.white,
+                textStyle: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              child: Text('Submit'),
             ),
           ),
         ],
