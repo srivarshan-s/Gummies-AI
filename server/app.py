@@ -194,7 +194,7 @@ def add_to_watchlist():
 @ app.route('/get_watchlist', methods=['GET'])
 def get_watchlist():
     try:
-        user_id = request.args.get('user_id')
+        user_id = request.args.get('user_id') or 'jakW0e77MlOvwDBlKb5HvpEwmcC3'
         if not user_id:
             return jsonify({'error': 'user_id is required'}), 400
 
