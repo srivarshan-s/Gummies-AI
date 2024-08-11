@@ -15,6 +15,9 @@ from fastapi import FastAPI
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
+# Exceptions
+from google.api_core.exceptions import InvalidArgument
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,  # Set the logging level to INFO (you can change this to DEBUG, ERROR, etc.)
@@ -67,6 +70,7 @@ prompt_stockOpinion = collection_gemini.find({"model": "stockOpinion"})[0]["prom
 
 # Close the MongoDB connection
 client.close()
+
 app = FastAPI()
 
 
@@ -74,7 +78,6 @@ app = FastAPI()
 def autocorrect(text: str):
     # Set upper-bound to stop hitting random API keys
     num_hits = len(GEMINI_API_KEYS)
-    print(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
         try:
@@ -86,8 +89,8 @@ def autocorrect(text: str):
             )
             response = model.generate_content(text)
             num_hits += 1
-            return json.load(response.text)
-        except Exception as e:
+            return json.loads(response.text)
+        except InvalidArgument as e:
             logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
             num_hits -= 1
             if num_hits <= 0:
@@ -96,56 +99,50 @@ def autocorrect(text: str):
 
 @app.get("/stockOpinion")
 def stockOpinion(ticker):
+    finnhub_client = finnhub.Client(api_key=FINNHUB_API_KEY)
+    to_date = datetime.now()
+    from_date = to_date - relativedelta(months=9)
+
+    # Format the dates
+    to_date_str = to_date.strftime("%Y-%m-%d")
+    from_date_str = from_date.strftime("%Y-%m-%d")
+
+    output = StringIO()
+    articles = finnhub_client.company_news(ticker, _from=from_date_str, to=to_date_str)                
+        
+    for article in articles:
+        output.write(article['headline'])
+        output.write('\n')
+        output.write(article['summary'])
+        date = datetime.fromtimestamp(article['datetime'])
+        output.write(f'\nPublished on {date.strftime("%Y-%m-%d")}\n\n')
+        output.write('\n')
+
+    news = output.getvalue()
+
     num_hits = len(GEMINI_API_KEYS)
-    print(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
         try:
             genai.configure(api_key=API_KEY)
-            finnhub_client = finnhub.Client(api_key=FINNHUB_API_KEY)
             model = genai.GenerativeModel(
-            'gemini-1.5-flash', 
-            system_instruction=prompt_stockOpinion, generation_config={"response_mime_type": "application/json"})
-            
-            to_date = datetime.now()
+                'gemini-1.5-flash', 
+                system_instruction=prompt_stockOpinion, generation_config={"response_mime_type": "application/json"}
+            )
+            response = model.generate_content(news)
+            num_hits += 1
 
-            from_date = to_date - relativedelta(months=9)
+            return json.loads(response.text)
 
-            # Format the dates
-            to_date_str = to_date.strftime("%Y-%m-%d")
-            from_date_str = from_date.strftime("%Y-%m-%d")
-
-            output = StringIO()
-            articles = finnhub_client.company_news(ticker, _from=from_date_str, to=to_date_str)                
-                
-            for article in articles:
-                output.write(article['headline'])
-                output.write('\n')
-                output.write(article['summary'])
-                date = datetime.fromtimestamp(article['datetime'])
-                output.write(f'\nPublished on {date.strftime("%Y-%m-%d")}\n\n')
-                output.write('\n')
-
-
-            news = output.getvalue()
-
-            return model.generate_content(news)
-
-        except Exception as e:
+        except InvalidArgument as e:
             logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
-		
 
-import os
-import requests
-import json
-
-import google.generativeai as genai
 
 # News API Class
-class NewsAPI:  
+class NewsAPI:
     def __init__(self,api_key=None):
         try:
             if(api_key == None):
