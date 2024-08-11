@@ -70,11 +70,39 @@ prompt_autocorrect = collection_gemini.find({"model": "autocorrect"})[0]["prompt
 
 prompt_stockOpinion = collection_gemini.find({"model": "stockOpinion"})[0]["prompt"]
 
+prompt_projection = collection_gemini.find({"model": "projection"})[0]["prompt"]
+
 # Close the MongoDB connection
 client.close()
 
 app = FastAPI()
 
+
+@app.get('/get_projections')
+def get_projections(object_string:str):
+    values = eval(object_string['results'])
+    values = list(map(lambda x: str(x['v']), values))
+    values = '['+",".join(values)+']'
+
+    num_hits = len(GEMINI_API_KEYS)
+    while GEMINI_API_KEYS:
+        API_KEY = secrets.choice(GEMINI_API_KEYS)
+        try:
+            prompt_projection = prompt_projection.format(STOCK_VALUES=values, TIMES=10)
+            genai.configure(api_key=API_KEY)
+            model = genai.GenerativeModel(
+                "gemini-1.5-flash",
+                system_instruction=prompt_projection,
+                generation_config={"response_mime_type": "application/json"},
+            )
+            response = model.generate_content(values)
+            num_hits += 1
+            return json.loads(response.text)
+        except InvalidArgument as e:
+            logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
+            num_hits -= 1
+            if num_hits <= 0:
+                return {"text": "ERROR"}
 
 @app.get("/autocorrect")
 def autocorrect(text: str):
