@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'discover.dart';
+import 'trend.dart';
 
 class StockMarketNewsPage extends StatefulWidget {
   @override
@@ -152,7 +153,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
         children: [
           _buildNewsPage(),
           _buildDiscoverPage(),
-          DummyPage(),
+          _buildtrendPage(),
           DummyPage(),
         ],
       ),
@@ -229,6 +230,10 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
 
   Widget _buildDiscoverPage() {
     return DiscoverNewsPage(); // Defined in discover.dart
+  }
+
+  Widget _buildtrendPage() {
+    return TrendsPage(); // Defined in discover.dart
   }
 
 
