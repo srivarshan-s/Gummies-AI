@@ -88,7 +88,7 @@ def autocorrect(text: str):
             )
             response = model.generate_content(text)
             num_hits += 1
-            return json.load(response.text)
+            return json.loads(response.text)
         except Exception as e:
             logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
             num_hits -= 1
