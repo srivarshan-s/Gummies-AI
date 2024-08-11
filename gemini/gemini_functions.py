@@ -73,7 +73,6 @@ app = FastAPI()
 def autocorrect(text: str):
     # Set upper-bound to stop hitting random API keys
     num_hits = len(GEMINI_API_KEYS)
-    print(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
         try:
@@ -96,7 +95,6 @@ def autocorrect(text: str):
 @app.get("/stockOpinion")
 def stockOpinion(ticker):
     num_hits = len(GEMINI_API_KEYS)
-    print(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
         try:
