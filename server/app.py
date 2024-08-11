@@ -106,6 +106,19 @@ def stock_details():
         return jsonify({'error': str(e)}), 500
 
 
+@ app.route('/quote_details', methods=['GET'])
+def quote_details():
+    query = request.args.get('query')
+    if not query:
+        return jsonify({'error': 'Missing query parameter'}), 400
+    try:
+        stock_quote = finnhub_client.quote(query)
+
+        return jsonify(stock_quote)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @ app.route('/remove_from_watchlist', methods=['DELETE'])
 def remove_from_watchlist():
     user = request.args.get('user')

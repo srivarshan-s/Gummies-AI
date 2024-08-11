@@ -51,15 +51,28 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
           final data = json.decode(response.body);
           print('Fetched expanded watchlist: $data');
 
-          for (var company in data) {
-            final symbol = company['Value'][0];
-            final companyName = company['Value'][1];
+          if (data is Map && data.containsKey('Value')) {
+          final companies = data['Value'] as List<dynamic>;
+
+          // Iterate through the list of companies
+          for (int i = 0; i < companies.length; i += 2) {
+            final symbol = companies[i]; // Symbol is at index i
+            final companyName = companies[i + 1]; // Company name is at index i+1
 
             setState(() {
-              bigCompaniesList.add({'symbol': symbol, 'companyName': companyName});
-              smallCompaniesList.add({'symbol': symbol, 'companyName': companyName});
+              bigCompaniesList.add({
+                'symbol': symbol.toString(),
+                'companyName': companyName.toString(),
+              });
+              smallCompaniesList.add({
+                'symbol': symbol.toString(),
+                'companyName': companyName.toString(),
+              });
             });
           }
+        } else {
+          print('Error: Expected data to be a Map with a "Value" key.');
+        }
 
           print('Updated big companies: $bigCompaniesList');
           print('Updated small companies: $smallCompaniesList');
