@@ -56,9 +56,11 @@ class Stocks:
 
 		# to_markdown(response.text)
 
-		for chunk in response:
-			print(chunk.text)
-			print("_"*80)
+		# for chunk in response:
+		# 	print(chunk.text)
+		# 	print("_"*80)
+
+		return response
 	
 
 	def userRecommendation(self, profile):
@@ -69,10 +71,11 @@ class Stocks:
 
 		response = model.generate_content(profile)
 
-		for chunk in response:
-			print(chunk.text)
-			print("_"*80)
+		# for chunk in response:
+		# 	print(chunk.text)
+		# 	print("_"*80)
 
+		return response
 
 
 stocks = Stocks()
