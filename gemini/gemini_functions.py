@@ -75,6 +75,7 @@ app = FastAPI()
 
 @app.get("/get_recommendations")
 def get_recommendations(profile: str):
+    global prompt_recommendation
     num_hits = len(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
@@ -97,6 +98,7 @@ def get_recommendations(profile: str):
 
 @app.get('/get_projections')
 def get_projections(object_string:str):
+    global prompt_projection
     values = eval(object_string['results'])
     values = list(map(lambda x: str(x['v']), values))
     values = '['+",".join(values)+']'
@@ -191,15 +193,15 @@ def stockOpinion(ticker: str):
 class NewsAPI:
     def __init__(self, api_key=None):
         try:
-            if api_key == None:
+            if api_key is None:
                 self.api_key = os.getenv("NEWS_API_KEY")
             else:
                 self.api_key = api_key
 
-            if self.api_key == None:
+            if self.api_key is None:
                 raise Exception
-        except:
-            raise Exception("Error loading News API Key")
+        except Exception as e:
+            raise Exception(f"Error loading News API key {self.api_key}: {e}")
 
     def clean_news(self, raw_news):
         news = raw_news["articles"]
@@ -213,14 +215,14 @@ class NewsAPI:
         return news
 
     def get_raw_all_news(self, query=None):
-        if query == None:
+        if query is None:
             query = "bitcoin"
         url = f"https://newsapi.org/v2/everything?q={query}&apiKey={self.api_key}"
         response = requests.get(url)
         return response.json()
 
     def get_raw_highlights(self, query=None):
-        if query == None:
+        if query is None:
             query = "bitcoin"
         url = f"https://newsapi.org/v2/top-headlines?q={query}&apiKey={self.api_key}"
         response = requests.get(url)
@@ -237,7 +239,7 @@ class Beautify:
         self.news_api = NewsAPI()
 
         # Load Gemini API key
-        if gemini_api_key == None:
+        if gemini_api_key is None:
             self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         else:
             self.gemini_api_key = gemini_api_key
@@ -252,8 +254,8 @@ class Beautify:
         try:
             with open(prompts_dir) as f:
                 self.prompts_dict = json.load(f)
-        except:
-            raise Exception("Error loading prompts")
+        except Exception as e:
+            raise Exception(f"Error loading prompts: {e}")
 
     def beautify_content(self, content_json, query="GENERAL_DESCRIPTION"):
         description = content_json["description"]
