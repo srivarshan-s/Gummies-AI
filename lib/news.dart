@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'discover.dart';
 import 'trend.dart';
+import 'insights.dart';
 
 class StockMarketNewsPage extends StatefulWidget {
   @override
@@ -95,6 +96,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Color(0xFF1e1f20),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -154,7 +156,7 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
           _buildNewsPage(),
           _buildDiscoverPage(),
           _buildtrendPage(),
-          DummyPage(),
+          _buildInsightsPage(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -233,8 +235,13 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
   }
 
   Widget _buildtrendPage() {
-    return TrendsPage(userId: userId!); // Defined in discover.dart
+    return TrendsPage(); // Defined in discover.dart
   }
+
+  Widget _buildInsightsPage() {
+    return InsightsPage(); // Defined in discover.dart
+  }
+
 
   Widget _buildNewsCard(BuildContext context, String title, String imagePath,
       String subtitle, String detail, String link, int index) {

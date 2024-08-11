@@ -190,7 +190,7 @@ class BrandDetailPage extends StatelessWidget {
               Text(
                 '2018',  // Example data
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.white54,
                   fontSize: 16,
                 ),
               ),
@@ -207,7 +207,7 @@ class BrandDetailPage extends StatelessWidget {
               Text(
                 'San Francisco',  // Example data
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.white54,
                   fontSize: 16,
                 ),
               ),
@@ -224,101 +224,101 @@ class BrandDetailPage extends StatelessWidget {
               Text(
                 fullDescription,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.white54,
                   fontSize: 16,
                 ),
                 textAlign: TextAlign.justify,
               ),
-              SizedBox(height: 20),
-              Text(
-                'Main products/services, and the primary target market:',
-                style: TextStyle(
-                  color: Color.fromRGBO(182, 109, 164, 1), // Purple color
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'This company offers organic gummy candies targeting health-conscious consumers.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.justify,
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Company’s position in the market, and how the company is different from its competitors:',
-                style: TextStyle(
-                  color: Color.fromRGBO(182, 109, 164, 1), // Purple color
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Gummies Inc. stands out for its commitment to sustainability and eco-friendly packaging, differentiating it from competitors.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.justify,
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Overview of your company\'s financial performance and its growth strategy for the next 5 years:',
-                style: TextStyle(
-                  color: Color.fromRGBO(182, 109, 164, 1), // Purple color
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Gummies Inc. has experienced consistent growth and aims to expand its product line and global reach in the coming years.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.justify,
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Business model and generation of company\'s revenue:',
-                style: TextStyle(
-                  color: Color.fromRGBO(182, 109, 164, 1), // Purple color
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'The company generates revenue through direct sales of gummy products both online and through retail partnerships.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.justify,
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Investment opportunities that are available:',
-                style: TextStyle(
-                  color: Color.fromRGBO(182, 109, 164, 1), // Purple color
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Gummies Inc. is open to equity investments to fund its expansion plans.',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.justify,
-              ),
+              // SizedBox(height: 20),
+              // Text(
+              //   'Main products/services, and the primary target market:',
+              //   style: TextStyle(
+              //     color: Color.fromRGBO(182, 109, 164, 1), // Purple color
+              //     fontWeight: FontWeight.bold,
+              //     fontSize: 20,
+              //   ),
+              // ),
+              // SizedBox(height: 8),
+              // Text(
+              //   'This company offers organic gummy candies targeting health-conscious consumers.',
+              //   style: TextStyle(
+              //     color: Colors.white,
+              //     fontSize: 16,
+              //   ),
+              //   textAlign: TextAlign.justify,
+              // ),
+              // SizedBox(height: 20),
+              // Text(
+              //   'Company’s position in the market, and how the company is different from its competitors:',
+              //   style: TextStyle(
+              //     color: Color.fromRGBO(182, 109, 164, 1), // Purple color
+              //     fontWeight: FontWeight.bold,
+              //     fontSize: 20,
+              //   ),
+              // ),
+              // SizedBox(height: 8),
+              // Text(
+              //   'Gummies Inc. stands out for its commitment to sustainability and eco-friendly packaging, differentiating it from competitors.',
+              //   style: TextStyle(
+              //     color: Colors.white,
+              //     fontSize: 16,
+              //   ),
+              //   textAlign: TextAlign.justify,
+              // ),
+              // SizedBox(height: 20),
+              // Text(
+              //   'Overview of your company\'s financial performance and its growth strategy for the next 5 years:',
+              //   style: TextStyle(
+              //     color: Color.fromRGBO(182, 109, 164, 1), // Purple color
+              //     fontWeight: FontWeight.bold,
+              //     fontSize: 20,
+              //   ),
+              // ),
+              // SizedBox(height: 8),
+              // Text(
+              //   'Gummies Inc. has experienced consistent growth and aims to expand its product line and global reach in the coming years.',
+              //   style: TextStyle(
+              //     color: Colors.white,
+              //     fontSize: 16,
+              //   ),
+              //   textAlign: TextAlign.justify,
+              // ),
+              // SizedBox(height: 20),
+              // Text(
+              //   'Business model and generation of company\'s revenue:',
+              //   style: TextStyle(
+              //     color: Color.fromRGBO(182, 109, 164, 1), // Purple color
+              //     fontWeight: FontWeight.bold,
+              //     fontSize: 20,
+              //   ),
+              // ),
+              // SizedBox(height: 8),
+              // Text(
+              //   'The company generates revenue through direct sales of gummy products both online and through retail partnerships.',
+              //   style: TextStyle(
+              //     color: Colors.white,
+              //     fontSize: 16,
+              //   ),
+              //   textAlign: TextAlign.justify,
+              // ),
+              // SizedBox(height: 20),
+              // Text(
+              //   'Investment opportunities that are available:',
+              //   style: TextStyle(
+              //     color: Color.fromRGBO(182, 109, 164, 1), // Purple color
+              //     fontWeight: FontWeight.bold,
+              //     fontSize: 20,
+              //   ),
+              // ),
+              // SizedBox(height: 8),
+              // Text(
+              //   'Gummies Inc. is open to equity investments to fund its expansion plans.',
+              //   style: TextStyle(
+              //     color: Colors.white,
+              //     fontSize: 16,
+              //   ),
+              //   textAlign: TextAlign.justify,
+              // ),
               SizedBox(height: 20),
               Text(
                 'Contact information:',
@@ -332,7 +332,7 @@ class BrandDetailPage extends StatelessWidget {
               Text(
                 'For more information, contact us at info@gummiesinc.com.',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.white54,
                   fontSize: 16,
                 ),
                 // textAlign: TextAlign.justify,
