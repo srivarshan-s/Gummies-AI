@@ -53,7 +53,7 @@ collection_finnhub = db["finnhub"]
 # Retrieve all documents and extract the API keys
 GEMINI_API_KEYS = [doc["key"] for doc in collection_gemini.find({}, {"_id": 0, "key": 1})]
 
-FINNHUB_API_KEYS = [doc["key"] for doc in collection_finnhub.find({}, {"_id": 0, "key": 1})]
+FINNHUB_API_KEY = [doc["key"] for doc in collection_finnhub.find({}, {"_id": 0, "key": 1})]
 
 # Access the gummies database and prompts collection
 db = client["gummies"]
@@ -95,14 +95,14 @@ def autocorrect(text: str):
             
 
 @app.get("/stockOpinion")
-def stockOpinion(self, ticker):
+def stockOpinion(ticker):
     num_hits = len(GEMINI_API_KEYS)
     print(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
         try:
             genai.configure(api_key=API_KEY)
-            self.finnhub_client = finnhub.Client(api_key=self.FINNHUB_API_KEY)
+            finnhub_client = finnhub.Client(api_key=FINNHUB_API_KEY)
             model = genai.GenerativeModel(
             'gemini-1.5-flash', 
             system_instruction=prompt_stockOpinion, generation_config={"response_mime_type": "application/json"})
@@ -116,7 +116,7 @@ def stockOpinion(self, ticker):
             from_date_str = from_date.strftime("%Y-%m-%d")
 
             output = StringIO()
-            articles = self.finnhub_client.company_news(ticker, _from=from_date_str, to=to_date_str)                
+            articles = finnhub_client.company_news(ticker, _from=from_date_str, to=to_date_str)                
                 
             for article in articles:
                 output.write(article['headline'])
@@ -137,7 +137,6 @@ def stockOpinion(self, ticker):
             if num_hits <= 0:
                 return {"text": "ERROR"}
 		
-
 
 
 if __name__ == "__main__":
