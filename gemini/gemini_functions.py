@@ -131,7 +131,11 @@ def stockOpinion(ticker):
 
             news = output.getvalue()
 
-            return model.generate_content(news)
+            opinion = model.generate_content(news)
+
+            num_hits += 1
+
+            return json.loads(opinion)
 
         except Exception as e:
             logging.warning(f"Model cannot generate with API key {API_KEY}: {e}")
