@@ -12,11 +12,9 @@ import requests
 import uvicorn
 from dateutil.relativedelta import relativedelta
 from fastapi import FastAPI
+from google.api_core.exceptions import InvalidArgument  # Exception Handling
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-
-# Exceptions
-from google.api_core.exceptions import InvalidArgument
 
 # Configure logging
 logging.basicConfig(
