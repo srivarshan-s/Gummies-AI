@@ -11,6 +11,7 @@ import google.generativeai as genai
 import requests
 import uvicorn
 from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from google.api_core.exceptions import InvalidArgument  # Exception Handling
 from pymongo.mongo_client import MongoClient
@@ -27,6 +28,7 @@ logging.basicConfig(
 )
 
 # Get MongoDB username and password from environment variables
+load_dotenv()
 MONGO_USNM = urllib.parse.quote_plus(os.environ["MONGO_USNM"])
 MONGO_PSWD = urllib.parse.quote_plus(os.environ["MONGO_PSWD"])
 
@@ -83,7 +85,6 @@ def get_recommendations(profile: str):
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
                 "gemini-1.5-flash",
-                system_instruction="",
                 generation_config={"response_mime_type": "application/json"},
             )
             response = model.generate_content(prompt_recommendation)
@@ -95,11 +96,10 @@ def get_recommendations(profile: str):
             if num_hits <= 0:
                 return {"text": "ERROR"}
 
-
 @app.get("/get_projections")
 def get_projections(object_string: str):
     global prompt_projection
-    values = eval(object_string["results"])
+    values = json.loads(object_string)["results"]
     values = list(map(lambda x: str(x["v"]), values))
     values = "[" + ",".join(values) + "]"
 
@@ -111,7 +111,6 @@ def get_projections(object_string: str):
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
                 "gemini-1.5-flash",
-                system_instruction="",
                 generation_config={"response_mime_type": "application/json"},
             )
             response = model.generate_content(prompt_projection)
@@ -279,4 +278,4 @@ class Summarizer:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="localhost", port=8080)

@@ -1,0 +1,8 @@
+services:
+  gemini-api:
+    build: .
+    container_name: gemini-api-container
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./gemini.log:/app/gemini.log
