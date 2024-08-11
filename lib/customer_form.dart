@@ -13,7 +13,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
   String? userId;
   int _riskLevel = 1;
   List<String> _selectedDomains = [];
-  List<String> _selectedCompanies = [];
+  List<Map<String, String>> _selectedCompanies = [];
   String _investmentExperience = '';
   String _investmentGoal = '';
   String _investmentHorizon = '';
@@ -455,7 +455,10 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
           ),
           onSuggestionSelected: (Suggestion suggestion) {
             setState(() {
-              _selectedCompanies.add(capitalize(suggestion.description));
+              _selectedCompanies.add({
+                'name': capitalize(suggestion.description),
+                'symbol': suggestion.symbol
+              });
             });
             _typeAheadController.clear();
           },
@@ -475,7 +478,8 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
           spacing: 8.0,
           children: _selectedCompanies
               .map((company) => Chip(
-                    label: Text(company, style: TextStyle(color: Colors.white)),
+                    label: Text(company['name']!,
+                        style: TextStyle(color: Colors.white)),
                     deleteIcon: Icon(Icons.close, color: Colors.white),
                     backgroundColor: Color(0xFF1e1f20),
                     onDeleted: () {
