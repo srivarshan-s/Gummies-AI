@@ -288,8 +288,8 @@ class Summarizer:
         try:
             with open(prompts_dir) as f:
                 self.prompts_dict = json.load(f)
-        except:
-            raise Exception("Error loading prompts")
+        except Exception as e:
+            raise Exception(f"Error loading prompts: {e}")
 
     def summarize_news(self, query=None):
         cleaned_news = self.news_api.get_all_news(query)
