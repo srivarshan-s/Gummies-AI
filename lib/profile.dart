@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -11,7 +13,9 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isHoveringSubmit = false;
   String? userId;
   Map<String, dynamic>? userData;
-  bool _isEditing = false; // State variable to toggle between view and edit mode
+  bool _isEditing =
+      false; // State variable to toggle between view and edit mode
+  File? _profileImage;
 
   @override
   void initState() {
@@ -60,14 +64,25 @@ class _ProfilePageState extends State<ProfilePage> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       // Implement form submission logic
-      print('Profile updated: ${userData!['firstName']} ${userData!['lastName']}, ${userData!['email']}');
+      print(
+          'Profile updated: ${userData!['firstName']} ${userData!['lastName']}, ${userData!['email']}');
       _toggleEditMode();
     }
   }
 
-  void _updateProfilePicture() {
-    // Implement functionality to update the profile picture
-    print('Update profile picture');
+  Future<void> _updateProfilePicture() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No image selected')),
+      );
+    }
   }
 
   void _logout() {
@@ -86,9 +101,9 @@ class _ProfilePageState extends State<ProfilePage> {
       body: userId == null || userData == null
           ? Center(child: CircularProgressIndicator())
           : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _isEditing ? _buildEditForm() : _buildProfileView(),
-      ),
+              padding: const EdgeInsets.all(16.0),
+              child: _isEditing ? _buildEditForm() : _buildProfileView(),
+            ),
       backgroundColor: Color(0xFF131314),
     );
   }
@@ -112,7 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               child: CircleAvatar(
                 radius: 100,
-                backgroundImage: NetworkImage(userData!['profileImageUrl'] ?? ''),
+                backgroundImage: NetworkImage(userData!['profileImage'] ?? ''),
                 backgroundColor: Colors.transparent,
               ),
             ),
@@ -146,10 +161,9 @@ class _ProfilePageState extends State<ProfilePage> {
           child: ElevatedButton(
             onPressed: _toggleEditMode,
             style: ElevatedButton.styleFrom(
-              padding:
-              EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
               backgroundColor:
-              _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
+                  _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
               foregroundColor: Colors.white,
               textStyle: TextStyle(
                 fontSize: 18,
@@ -177,10 +191,9 @@ class _ProfilePageState extends State<ProfilePage> {
           child: ElevatedButton(
             onPressed: _logout,
             style: ElevatedButton.styleFrom(
-              padding:
-              EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
               backgroundColor:
-              _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
+                  _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
               foregroundColor: Colors.white,
               textStyle: TextStyle(
                 fontSize: 18,
@@ -221,7 +234,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         child: CircleAvatar(
                           radius: 100,
-                          backgroundImage: NetworkImage(userData!['profileImageUrl'] ?? ''),
+                          backgroundImage:
+                              NetworkImage(userData!['profileImage'] ?? ''),
                           backgroundColor: Colors.transparent,
                         ),
                       ),
@@ -323,10 +337,9 @@ class _ProfilePageState extends State<ProfilePage> {
               // },
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
-                padding:
-                EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 backgroundColor:
-                _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
+                    _isHoveringSubmit ? Colors.blue : Color(0xFF1e1f20),
                 foregroundColor: Colors.white,
                 textStyle: TextStyle(
                   fontSize: 18,

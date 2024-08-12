@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class StartupFormPage extends StatefulWidget {
   @override
@@ -11,6 +13,7 @@ class StartupFormPage extends StatefulWidget {
 class _StartupFormPageState extends State<StartupFormPage> {
   final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
+  File? _profileImage;
 
   // Controllers to capture user input
   final TextEditingController _yearFoundedController = TextEditingController();
@@ -58,6 +61,21 @@ class _StartupFormPageState extends State<StartupFormPage> {
       print('Error submitting form: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error submitting form: $e')),
+      );
+    }
+  }
+
+  Future<void> _updateProfilePicture() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No image selected')),
       );
     }
   }
@@ -228,7 +246,7 @@ class _StartupFormPageState extends State<StartupFormPage> {
         Center(
           child: ElevatedButton.icon(
             onPressed: () {
-              // Handle image upload
+              _updateProfilePicture();
             },
             icon: Icon(Icons.upload, color: Colors.white),
             label: Text('Upload Logo', style: TextStyle(color: Colors.white)),
