@@ -81,7 +81,8 @@ prompt_expandWatchlist = collection_gemini.find(
     {"model": "expandWatchlist"})[0]["prompt"]
 prompt_summstartup = collection_gemini.find(
     {"model": "summariseStartup"})[0]["prompt"]
-
+prompt_summnews = collection_gemini.find(
+    {"model": "summariseNews"})[0]["prompt"]
 
 # Close the MongoDB connection
 client.close()
@@ -276,6 +277,45 @@ def expandWatchlist(symbols):
                 f"JSON Error: {e}")
             return {"text": "JSONERROR"}
 
+@app.get("/get_news")
+def get_news(query: str):
+    news_api = NewsAPI(api_key=NEWS_API_KEY[0])
+    return news_api.get_all_news(query)
+
+@app.get("/get_highlights")
+def get_highlights(query: str):
+    news_api = NewsAPI(api_key=NEWS_API_KEY[0])
+    return news_api.get_highlights(query)
+
+@app.get("/summarize_news")
+def summarize_news(query: str):
+    news_api = NewsAPI(api_key=NEWS_API_KEY[0])
+    cleaned_news = news_api.get_all_news(query)
+    article_contents = "\n".join(cleaned_news["contents"])
+
+    # Call Gemini API
+    while GEMINI_API_KEYS:
+        API_KEY = secrets.choice(GEMINI_API_KEYS)
+        try:
+            genai.configure(api_key=API_KEY)
+            model = genai.GenerativeModel(
+                "gemini-1.5-flash",
+                generation_config={"response_mime_type": "application/json"},
+                system_instruction=" ",
+            )
+            response = model.generate_content(
+                prompt_summnews.format(
+                    ARTICLES=article_contents)
+            )
+            return json.loads(response.text)
+       
+        except InvalidArgument as e:
+            logging.warning(
+                f"Model cannot generate with API key {API_KEY}: {e}")
+            GEMINI_API_KEYS.remove(API_KEY)
+            if not GEMINI_API_KEYS:
+                return {"text": "ERROR"}
+
 
 # News API Classgem
 class NewsAPI:
@@ -320,49 +360,6 @@ class NewsAPI:
         raw_news = self.get_raw_highlights(query)
         news = self.clean_news(raw_news)
         return news
-
-
-# Main Class - Summarizer class
-class Summarizer:
-    prompts_dict = {}
-
-    def __init__(self, gemini_api_key=None, prompts_dir="../prompts.json"):
-        self.news_api = NewsAPI()
-
-        # Load Gemini API key
-        if gemini_api_key is None:
-            self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        else:
-            self.gemini_api_key = gemini_api_key
-
-        genai.configure(api_key=self.gemini_api_key)
-        self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
-
-        self.load_prompts(prompts_dir)
-
-    def load_prompts(self, prompts_dir):
-        try:
-            with open(prompts_dir) as f:
-                self.prompts_dict = json.load(f)
-        except Exception as e:
-            raise Exception(f"Error loading prompts: {e}")
-
-    def summarize_news(self, query=None):
-        cleaned_news = self.news_api.get_all_news(query)
-        article_contents = "\n".join(cleaned_news["contents"])
-
-        # Call Gemini API
-        response = self.gemini_model.generate_content(
-            self.prompts_dict["SUMMARIZE_PROMPT"].format(
-                ARTICLES=article_contents)
-        )
-
-        return response.text
-
-    def get_highlights(self, query=None):
-        news = self.news_api.get_highlights(query)
-        return news
-
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
