@@ -60,12 +60,49 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
     }
   }
 
-  Future<void> _submitWatchlist() async {
+  Future<void> _submitForm() async {
+    final formData = {
+      'user': userId,
+      'selected_companies': _selectedCompanies,
+      'risk_level': _riskLevel,
+      'selected_domains': _selectedDomains,
+      'investment_experience': _investmentExperience,
+      'investment_goal': _investmentGoal,
+      'investment_horizon': _investmentHorizon,
+      'investment_type': _investmentType,
+      'financial_situation': _financialSituation,
+      'investment_strategy': _investmentStrategy,
+      'dividend_preference': _dividendPreference,
+      'geographical_preference': _geographicalPreference,
+      'sustainability_preference': _sustainabilityPreference,
+      'trading_frequency': _tradingFrequency,
+    };
+
     final url = 'http://10.0.2.2:3000/add_to_watchlist';
+    final user_url = 'http://10.0.2.2:3000/store_user_form_data';
+
     final watchlistData = {
       'user': userId,
       'selected_companies': _selectedCompanies,
     };
+
+    try {
+      final response = await http.post(
+        Uri.parse(user_url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(formData),
+      );
+
+      if (response.statusCode == 201) {
+        // Navigate to the news page if the data is successfully added
+        Navigator.pushNamed(context, '/news', arguments: userId);
+      } else {
+        // Handle error
+        print('Failed to add user forms: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
 
     try {
       final response = await http.post(
@@ -517,7 +554,7 @@ class _CustomerFormPageState extends State<CustomerFormPage> {
             SizedBox(width: 20),
             ElevatedButton(
               onPressed: () {
-                _submitWatchlist();
+                _submitForm();
               },
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),

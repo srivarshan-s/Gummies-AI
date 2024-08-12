@@ -15,6 +15,8 @@ class _StartupFormPageState extends State<StartupFormPage> {
   int _currentStep = 0;
   File? _profileImage;
 
+  String? companyID;
+
   // Controllers to capture user input
   final TextEditingController _yearFoundedController = TextEditingController();
   final TextEditingController _headquartersController = TextEditingController();
@@ -29,6 +31,18 @@ class _StartupFormPageState extends State<StartupFormPage> {
   final TextEditingController _investmentOpportunitiesController =
       TextEditingController();
   final TextEditingController _contactInfoController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Retrieve the MongoDB user ID passed as an argument and store it in the state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as String?;
+      setState(() {
+        companyID = args;
+      });
+    });
+  }
 
   Future<void> _submitForm() async {
     final formData = {
@@ -54,6 +68,8 @@ class _StartupFormPageState extends State<StartupFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Form submitted successfully!')),
         );
+
+        Navigator.pushNamed(context, '/news', arguments: companyID);
       } else {
         throw Exception('Failed to submit form');
       }

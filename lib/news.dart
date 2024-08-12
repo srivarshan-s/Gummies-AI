@@ -242,7 +242,6 @@ class _StockMarketNewsPageState extends State<StockMarketNewsPage> {
     return InsightsPage(userId: userId!); // Defined in discover.dart
   }
 
-
   Widget _buildNewsCard(BuildContext context, String title, String imagePath,
       String subtitle, String detail, String link, int index) {
     bool isExpanded = _expandedIndex == index;

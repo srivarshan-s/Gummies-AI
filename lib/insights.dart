@@ -42,6 +42,68 @@ class _InsightsPageState extends State<InsightsPage>
     await _fetchUserWatchlist();
     await fetchAndPopulateCompanyLists(widget.userId);
     await _fetchAndStoreAllOpinions();
+    // fetchAllCharts();
+    await getUserFormDataAndRecommend(widget.userId);
+  }
+
+  Future<void> getUserFormDataAndRecommend(String userId) async {
+    try {
+      // Step 1: Fetch user form data
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:3000/get_user_form_data?user_id=$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the user data
+        final userData = json.decode(response.body);
+
+        // Combine all relevant user data into a profile string
+        final profile = _createProfileString(userData);
+
+        // Step 2: Pass the profile to the recommendations API
+        await getRecommendations(profile);
+      } else {
+        print('Failed to load user data: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+    }
+  }
+
+  String _createProfileString(Map<String, dynamic> userData) {
+    return '''
+    Risk Level: ${userData['riskLevel']}
+    Investment Experience: ${userData['investmentExperience']}
+    Investment Goal: ${userData['investmentGoal']}
+    Investment Horizon: ${userData['investmentHorizon']}
+    Investment Type: ${userData['investmentType']}
+    Financial Situation: ${userData['financialSituation']}
+    Selected Domains: ${userData['selectedDomains']}
+    Selected Companies: ${userData['selectedCompanies']}
+    Investment Strategy: ${userData['investmentStrategy']}
+    Dividend Preference: ${userData['dividendPreference']}
+    Geographical Preference: ${userData['geographicalPreference']}
+    Sustainability Preference: ${userData['sustainabilityPreference']}
+    Trading Frequency: ${userData['tradingFrequency']}
+  ''';
+  }
+
+  Future<void> getRecommendations(String profile) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            'http://10.0.2.2:8080/get_recommendations?profile=${Uri.encodeComponent(profile)}'),
+      );
+
+      if (response.statusCode == 200) {
+        final recommendations = json.decode(response.body);
+        print('Recommendations: $recommendations');
+      } else {
+        print('Failed to get recommendations: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching recommendations: $e');
+    }
   }
 
   Future<void> fetchAndPopulateCompanyLists(String userId) async {

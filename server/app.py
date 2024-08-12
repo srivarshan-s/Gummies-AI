@@ -28,6 +28,7 @@ db = client['gummies']
 user_collection = db['users']
 company_collection = db['startups']
 company_form_collection = db['startup_forms']
+user_form_collection = db['user_form']
 watchlist_collection = db['watchlist']
 
 matplotlib.use('Agg')
@@ -137,6 +138,22 @@ def store_company_data():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/store_user_form_data', methods=['POST'])
+def store_user_form_data():
+    try:
+        # Get the JSON data from the request
+        company_data = request.json
+
+        # Insert the data into MongoDB
+        result = user_form_collection.insert_one(company_data)
+
+        # Return the ID of the inserted document
+        return jsonify({'id': str(result.inserted_id)}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/get_company_data', methods=['GET'])
 def get_company_data():
     try:
@@ -161,6 +178,30 @@ def get_company_data():
             return jsonify(company_data), 200
         else:
             return jsonify({'error': 'Company not found'}), 404
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/get_user_form_data', methods=['GET'])
+def get_user_form_data():
+    try:
+        # Retrieve the user ID from the query parameters
+        user_id = request.args.get('user_id')
+
+        if not user_id:
+            return jsonify({'error': 'Missing user_id parameter'}), 400
+
+        # Find the document in the MongoDB collection by user ID
+        user_form_data = user_form_collection.find_one({'user': user_id})
+
+        if not user_form_data:
+            return jsonify({'error': 'User data not found'}), 404
+
+        # Convert ObjectId to string
+        user_form_data['_id'] = str(user_form_data['_id'])
+
+        return jsonify(user_form_data), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
