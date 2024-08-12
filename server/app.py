@@ -1,6 +1,7 @@
 from http.client import HTTPException
 from flask import Flask, request, jsonify, send_file
 import os
+from bson import ObjectId
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import certifi
@@ -26,6 +27,7 @@ client = MongoClient(uri, server_api=ServerApi('1'), tlsCAFile=certifi.where())
 db = client['gummies']
 user_collection = db['users']
 company_collection = db['startups']
+company_form_collection = db['startup_forms']
 watchlist_collection = db['watchlist']
 
 matplotlib.use('Agg')
@@ -115,6 +117,54 @@ def quote_details():
         stock_quote = finnhub_client.quote(query)
 
         return jsonify(stock_quote)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/store_company_data', methods=['POST'])
+def store_company_data():
+    try:
+        # Get the JSON data from the request
+        company_data = request.json
+
+        # Insert the data into MongoDB
+        result = company_form_collection.insert_one(company_data)
+
+        # Return the ID of the inserted document
+        return jsonify({'id': str(result.inserted_id)}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/get_company_data', methods=['GET'])
+def get_company_data():
+    try:
+        # Get the query parameters from the request
+        company_id = request.args.get('id')
+        company_name = request.args.get('name')
+
+        # Initialize a query dictionary
+        query = {}
+
+        # Search by ID if provided
+        if company_id:
+            query['_id'] = ObjectId(company_id)
+
+        # Search by name if provided
+        if company_name:
+            query['name'] = company_name
+
+        # Fetch the company data from MongoDB
+        company_data = company_form_collection.find_one(query)
+
+        if company_data:
+            # Convert ObjectId to string
+            company_data['_id'] = str(company_data['_id'])
+            return jsonify(company_data), 200
+        else:
+            return jsonify({'error': 'Company not found'}), 404
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

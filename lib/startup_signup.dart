@@ -47,7 +47,7 @@ class _StartupSignupPageState extends State<StartupSignupPage> {
       // Navigate to the next page (e.g., a form for additional company details)
       Navigator.pushNamed(
         context,
-        '/customer_form',
+        '/startup_form',
         arguments: mongoDBCompanyId,
       );
     } on FirebaseAuthException catch (e) {

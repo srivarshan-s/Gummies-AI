@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StartupFormPage extends StatefulWidget {
   @override
@@ -10,6 +12,76 @@ class _StartupFormPageState extends State<StartupFormPage> {
   final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
 
+  // Controllers to capture user input
+  final TextEditingController _yearFoundedController = TextEditingController();
+  final TextEditingController _headquartersController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _productsController = TextEditingController();
+  final TextEditingController _marketPositionController =
+      TextEditingController();
+  final TextEditingController _financialPerformanceController =
+      TextEditingController();
+  final TextEditingController _businessModelController =
+      TextEditingController();
+  final TextEditingController _investmentOpportunitiesController =
+      TextEditingController();
+  final TextEditingController _contactInfoController = TextEditingController();
+
+  Future<void> _submitForm() async {
+    final formData = {
+      'yearFounded': _yearFoundedController.text,
+      'headquarters': _headquartersController.text,
+      'description': _descriptionController.text,
+      'products': _productsController.text,
+      'marketPosition': _marketPositionController.text,
+      'financialPerformance': _financialPerformanceController.text,
+      'businessModel': _businessModelController.text,
+      'investmentOpportunities': _investmentOpportunitiesController.text,
+      'contactInfo': _contactInfoController.text,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3000/store_company_data'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(formData),
+      );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Form submitted successfully!')),
+        );
+      } else {
+        throw Exception('Failed to submit form');
+      }
+    } catch (e) {
+      print('Error submitting form: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error submitting form: $e')),
+      );
+    }
+  }
+
+  Future<String?> autoCorrectText(String text) async {
+    try {
+      final url = Uri.parse(
+          'http://10.0.2.2:8080/autocorrect?text=${Uri.encodeComponent(text)}');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print(data['text']);
+        return data['text'];
+      } else {
+        print('Failed to auto-correct: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error auto-correcting text: $e');
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +89,7 @@ class _StartupFormPageState extends State<StartupFormPage> {
         decoration: BoxDecoration(
           color: Color(0xFF131314),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 80, 20, 80), // Added padding to the entire background
+        padding: const EdgeInsets.fromLTRB(20, 80, 20, 80),
         child: Center(
           child: SingleChildScrollView(
             child: Form(
@@ -32,8 +104,6 @@ class _StartupFormPageState extends State<StartupFormPage> {
 
   Widget _buildFirstPage() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
           child: Image.asset('assets/startup_form1.png', height: 300),
@@ -63,37 +133,48 @@ class _StartupFormPageState extends State<StartupFormPage> {
                 // Handle icon click
                 print('Icon clicked!');
               },
-              child: Image.asset('assets/google-gemini-icon.png', width: 20, height: 20),
+              child: Image.asset('assets/google-gemini-icon.png',
+                  width: 20, height: 20),
             ),
           ],
         ),
         const SizedBox(height: 20),
         _buildTextField(
+          controller: _yearFoundedController,
           label: 'In which year was your company founded?',
         ),
         const SizedBox(height: 20),
         _buildTextField(
+          controller: _headquartersController,
           label: 'Where is your headquarters located?',
         ),
         const SizedBox(height: 20),
         _buildExpandableTextField(
-          label: 'Provide a brief description of your company, its mission, and the industry in which it operates.',
+          controller: _descriptionController,
+          label:
+              'Provide a brief description of your company, its mission, and the industry in which it operates.',
         ),
         const SizedBox(height: 20),
         _buildExpandableTextField(
-          label: 'What are your main products or services, and who is your primary target market?',
+          controller: _productsController,
+          label:
+              'What are your main products or services, and who is your primary target market?',
         ),
         const SizedBox(height: 20),
         _buildExpandableTextField(
-          label: 'How would you describe your company’s position in the market, and what sets your company apart from its competitors?',
+          controller: _marketPositionController,
+          label:
+              'How would you describe your company’s position in the market, and what sets your company apart from its competitors?',
         ),
         const SizedBox(height: 20),
         Center(
           child: ElevatedButton(
             onPressed: () {
-              setState(() {
-                _currentStep = 1;
-              });
+              if (_formKey.currentState!.validate()) {
+                setState(() {
+                  _currentStep = 1;
+                });
+              }
             },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
@@ -123,18 +204,24 @@ class _StartupFormPageState extends State<StartupFormPage> {
         ),
         const SizedBox(height: 5),
         _buildExpandableTextField(
-          label: 'Provide a brief overview of your company\'s financial performance and its growth strategy for the next 5 years.',
+          controller: _financialPerformanceController,
+          label:
+              'Provide a brief overview of your company\'s financial performance and its growth strategy for the next 5 years.',
         ),
         const SizedBox(height: 20),
         _buildExpandableTextField(
-          label: 'What is your business model? How does your company generate revenue?',
+          controller: _businessModelController,
+          label:
+              'What is your business model? How does your company generate revenue?',
         ),
         const SizedBox(height: 20),
         _buildExpandableTextField(
+          controller: _investmentOpportunitiesController,
           label: 'What investment opportunities are available?',
         ),
         const SizedBox(height: 20),
         _buildExpandableTextField(
+          controller: _contactInfoController,
           label: 'Who should potential investors contact for more information?',
         ),
         const SizedBox(height: 20),
@@ -146,7 +233,8 @@ class _StartupFormPageState extends State<StartupFormPage> {
             icon: Icon(Icons.upload, color: Colors.white),
             label: Text('Upload Logo', style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 60, vertical: 15), // Made the button longer
+              padding: EdgeInsets.symmetric(
+                  horizontal: 60, vertical: 15), // Made the button longer
               backgroundColor: Color.fromRGBO(182, 109, 164, 1),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -169,6 +257,7 @@ class _StartupFormPageState extends State<StartupFormPage> {
                 backgroundColor: Color(0xFF1e1f20),
                 foregroundColor: Colors.white,
                 textStyle: TextStyle(
+                  inherit: true,
                   fontSize: 18,
                 ),
                 shape: RoundedRectangleBorder(
@@ -180,7 +269,9 @@ class _StartupFormPageState extends State<StartupFormPage> {
             SizedBox(width: 20),
             ElevatedButton(
               onPressed: () {
-                // Handle form submission
+                if (_formKey.currentState!.validate()) {
+                  _submitForm();
+                }
               },
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
@@ -201,7 +292,8 @@ class _StartupFormPageState extends State<StartupFormPage> {
     );
   }
 
-  Widget _buildTextField({required String label}) {
+  Widget _buildTextField(
+      {required String label, required TextEditingController controller}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -210,45 +302,25 @@ class _StartupFormPageState extends State<StartupFormPage> {
           style: TextStyle(color: Colors.white, fontSize: 16),
         ),
         SizedBox(height: 8),
-        Stack(
-          children: [
-            TextFormField(
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Color(0xFF1e1f20),
-                contentPadding: EdgeInsets.only(top: 20, left: 40), // Added top padding
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(color: Colors.white60),
-                ),
-              ),
-              style: TextStyle(color: Colors.white),
-            ),
-            // Positioned(
-            //   top: 8,
-            //   right: 8,
-            //   child: GestureDetector(
-            //     onTap: () {
-            //       // Handle icon click
-            //       print('Icon clicked!');
-            //     },
-            //     child: Image.asset('assets/google-gemini-icon.png', width: 20, height: 20), // Icon on the top left corner
-            //   ),
-            // ),
-          ],
+        TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Color(0xFF1e1f20),
+            contentPadding:
+                EdgeInsets.only(top: 20, left: 40), // Added top padding
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+          ),
+          style: TextStyle(color: Colors.white),
         ),
       ],
     );
   }
 
-  Widget _buildExpandableTextField({required String label}) {
+  Widget _buildExpandableTextField({
+    required String label,
+    required TextEditingController controller,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -260,17 +332,21 @@ class _StartupFormPageState extends State<StartupFormPage> {
         Stack(
           children: [
             TextFormField(
+              controller:
+                  controller, // Assign the controller to the TextFormField
               maxLines: 5,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Color(0xFF1e1f20),
-                contentPadding: EdgeInsets.only(top: 20, right: 40, left: 20), // Added top padding
+                contentPadding: EdgeInsets.only(
+                    top: 20, right: 40, left: 20), // Added top padding
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
+                  borderSide:
+                      BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
@@ -283,13 +359,19 @@ class _StartupFormPageState extends State<StartupFormPage> {
               top: 8,
               right: 8,
               child: GestureDetector(
-                onTap: () {
-                  // Handle icon click
-                  print('Icon clicked!');
+                onTap: () async {
+                  // Call the auto-correct function with the text in the field
+                  final correctedText = await autoCorrectText(controller.text);
+                  if (correctedText != null) {
+                    setState(() {
+                      controller.text = correctedText;
+                    });
+                  }
                 },
                 child: Padding(
                   padding: EdgeInsets.all(4.0), // Added padding to the icon
-                  child: Image.asset('assets/google-gemini-icon.png', width: 20, height: 20), // Icon on the top left corner
+                  child: Image.asset('assets/google-gemini-icon.png',
+                      width: 20, height: 20), // Icon on the top left corner
                 ),
               ),
             ),
@@ -316,7 +398,8 @@ class _StartupFormPageState extends State<StartupFormPage> {
             icon: Icon(Icons.upload, color: Colors.white),
             label: Text('Upload Logo', style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 60, vertical: 15), // Made the button longer
+              padding: EdgeInsets.symmetric(
+                  horizontal: 60, vertical: 15), // Made the button longer
               backgroundColor: Color.fromRGBO(182, 109, 164, 1),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
