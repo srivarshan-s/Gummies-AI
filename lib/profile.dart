@@ -35,6 +35,44 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  Future<void> _editUser(String userId, Map<String, String> userData) async {
+    try {
+      print(userData);
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3000/edit_user'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': userId,
+          'userData': userData,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('User updated successfully');
+      } else {
+        print('Failed to update user: ${response.body}');
+      }
+    } catch (e) {
+      print('Error updating user: $e');
+    }
+  }
+
+  void _submitEditForm() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      Map<String, String> updatedData = {
+        'name': userData!['name']!,
+        'email': userData!['email']!,
+      };
+
+      _editUser(userId!, updatedData);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profile details saved')),
+    );
+  }
+
   Future<Map<String, dynamic>> _fetchUserData(String userId) async {
     final url = 'http://10.0.2.2:3000/get_user_data?user_id=$userId';
 
@@ -65,7 +103,7 @@ class _ProfilePageState extends State<ProfilePage> {
       _formKey.currentState!.save();
       // Implement form submission logic
       print(
-          'Profile updated: ${userData!['firstName']} ${userData!['lastName']}, ${userData!['email']}');
+          'Profile updated: ${userData!['displayName']}, ${userData!['email']}');
       _toggleEditMode();
     }
   }
@@ -255,9 +293,9 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           SizedBox(height: 20),
           TextFormField(
-            initialValue: userData!['firstName'] ?? '',
+            initialValue: userData!['displayName'] ?? '',
             decoration: InputDecoration(
-              labelText: 'First Name',
+              labelText: 'User Name',
               labelStyle: TextStyle(color: Colors.white),
               filled: true,
               fillColor: Color(0xFF1e1f20),
@@ -274,30 +312,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             style: TextStyle(color: Colors.white),
-            onSaved: (value) => userData!['firstName'] = value!,
-          ),
-          SizedBox(height: 20),
-          TextFormField(
-            initialValue: userData!['lastName'] ?? '',
-            decoration: InputDecoration(
-              labelText: 'Last Name',
-              labelStyle: TextStyle(color: Colors.white),
-              filled: true,
-              fillColor: Color(0xFF1e1f20),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide(color: Colors.white60),
-              ),
-            ),
-            style: TextStyle(color: Colors.white),
-            onSaved: (value) => userData!['lastName'] = value!,
+            onSaved: (value) => userData!['name'] = value!,
           ),
           SizedBox(height: 20),
           TextFormField(
@@ -331,11 +346,7 @@ class _ProfilePageState extends State<ProfilePage> {
               _isHoveringSubmit = false;
             }),
             child: ElevatedButton(
-              // onPressed: () {
-              //   Navigator.pushNamed(context,
-              //       '/customer_form'); // Navigate to Sign Up Page
-              // },
-              onPressed: _submitForm,
+              onPressed: _submitEditForm,
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 backgroundColor:

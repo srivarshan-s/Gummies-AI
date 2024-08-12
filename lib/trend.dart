@@ -20,20 +20,23 @@ class _TrendsPageState extends State<TrendsPage>
   late Animation<double> _animation;
   List<Map<String, dynamic>> companies = [];
   bool isLoading = true;
+  Map<String, String> charts = {};
+  Map<String, String> chartIcons = {};
 
   List<String> initialCompanies = [
-    "AAPL",   // Apple Inc.
-    "MSFT",   // Microsoft Corporation
-    "GOOGL",  // Alphabet Inc. (Class A)
-    "AMZN",   // Amazon.com Inc.
-    "TSLA",   // Tesla, Inc.
-    "NVDA",   // NVIDIA Corporation
-    "BRK.B",  // Berkshire Hathaway Inc. (Class B)
-    "META",   // Meta Platforms, Inc. (formerly Facebook)
-    "V",      // Visa Inc.
-    "JPM",    // JPMorgan Chase & Co.
-    "JNJ"    // Johnson & Johnson
-];
+    "AAPL", // Apple Inc.
+    "MSFT", // Microsoft Corporation
+    "INTC", // Intel Corporation
+    // "GOOGL", // Alphabet Inc. (Class A)
+    // "AMZN", // Amazon.com Inc.
+    // "TSLA", // Tesla, Inc.
+    // "NVDA", // NVIDIA Corporation
+    // "BRK.B", // Berkshire Hathaway Inc. (Class B)
+    // "META", // Meta Platforms, Inc. (formerly Facebook)
+    // "V", // Visa Inc.
+    // "JPM", // JPMorgan Chase & Co.
+    // "JNJ" // Johnson & Johnson
+  ];
 
   @override
   void initState() {
@@ -44,6 +47,7 @@ class _TrendsPageState extends State<TrendsPage>
     );
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     fetchStockDetails();
+    fetchAllCharts();
   }
 
   Future<List<Suggestion>> _fetchCompanies(String pattern) async {
@@ -64,25 +68,25 @@ class _TrendsPageState extends State<TrendsPage>
   }
 
   void _onCompanySelected(Suggestion suggestion) async {
-  print("Selected: ${suggestion.symbol}");
-  
-  if (!initialCompanies.contains(suggestion.symbol)) {
-    setState(() {
-      initialCompanies.insert(0, suggestion.symbol);
-    });
+    print("Selected: ${suggestion.symbol}");
 
-    // Fetch stock details asynchronously
-    final stockDetails = await _fetchStockDetail(suggestion.symbol);
-    
-    if (stockDetails != null) {
+    if (!initialCompanies.contains(suggestion.symbol)) {
       setState(() {
-        companies.insert(0, stockDetails);
+        initialCompanies.insert(0, suggestion.symbol);
       });
-    }
-  }
 
-  print(initialCompanies);
-}
+      // Fetch stock details asynchronously
+      final stockDetails = await _fetchStockDetail(suggestion.symbol);
+
+      if (stockDetails != null) {
+        setState(() {
+          companies.insert(0, stockDetails);
+        });
+      }
+    }
+
+    print(initialCompanies);
+  }
 
   Future<void> _addToWatchlist(String symbol, String companyName) async {
     final url = 'http://10.0.2.2:3000/add_to_watchlist';
@@ -142,6 +146,7 @@ class _TrendsPageState extends State<TrendsPage>
           companies.add(stockDetails);
         }
       }
+      print('Fetched stock details: $companies');
       setState(() {
         isLoading = false; // Stop loading once all details are fetched
       });
@@ -211,6 +216,52 @@ class _TrendsPageState extends State<TrendsPage>
     }
   }
 
+  Future<void> fetchAllCharts() async {
+    for (String ticker in initialCompanies) {
+      await _fetchChart(ticker);
+      await _fetchChartIcon(ticker);
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> _fetchChart(String ticker) async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://10.0.2.2:3000/generate_chart?ticker=$ticker'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          charts[ticker] =
+              'data:image/png;base64,' + base64Encode(response.bodyBytes);
+        });
+      } else {
+        print('Failed to load chart for $ticker: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching chart for $ticker: $e');
+    }
+  }
+
+  Future<void> _fetchChartIcon(String ticker) async {
+    try {
+      final response = await http.get(
+          Uri.parse('http://10.0.2.2:3000/generate_chart_icon?ticker=$ticker'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          chartIcons[ticker] =
+              'data:image/png;base64,' + base64Encode(response.bodyBytes);
+        });
+      } else {
+        print('Failed to load chart for $ticker: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching chart for $ticker: $e');
+    }
+  }
+
   Future<void> _fetchUserWatchlist() async {
     final url = 'http://10.0.2.2:3000/get_watchlist?user_id=${widget.userId}';
 
@@ -256,66 +307,80 @@ class _TrendsPageState extends State<TrendsPage>
                 child: Column(
                   children: [
                     Autocomplete<Suggestion>(
-              optionsBuilder: (TextEditingValue textEditingValue) async {
-                return await _fetchCompanies(textEditingValue.text);
-              },
-              displayStringForOption: (Suggestion option) => option.description,
-              onSelected: _onCompanySelected,
-              fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
-                return TextField(
-                  controller: fieldTextEditingController,
-                  style: TextStyle(color: Colors.white),
-                  focusNode: fieldFocusNode,
-                  decoration: InputDecoration(
-                    labelText: 'Search for a company',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Color.fromRGBO(182, 109, 164, 1)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: Colors.white60),
-                    ),
-                  ),
-                );
-              },
-              optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<Suggestion> onSelected, Iterable<Suggestion> options) {
-                return Align(
-                  alignment: Alignment.topLeft,
-                  child: Material(
-                    elevation: 4.0,
-                    child: Container(
-                      width: MediaQuery.of(context).size.width - 32,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF1e1f20), // Background color of the dropdown
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ListView.builder(
-                        padding: EdgeInsets.all(8.0),
-                        itemCount: options.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final Suggestion option = options.elementAt(index);
-                          return GestureDetector(
-                            onTap: () {
-                              onSelected(option);
-                            },
-                            child: ListTile(
-                              title: Text(option.description,style: TextStyle(color: Colors.white)),
-                              subtitle: Text(option.symbol, style: TextStyle(color: Colors.white)),
+                      optionsBuilder:
+                          (TextEditingValue textEditingValue) async {
+                        return await _fetchCompanies(textEditingValue.text);
+                      },
+                      displayStringForOption: (Suggestion option) =>
+                          option.description,
+                      onSelected: _onCompanySelected,
+                      fieldViewBuilder: (BuildContext context,
+                          TextEditingController fieldTextEditingController,
+                          FocusNode fieldFocusNode,
+                          VoidCallback onFieldSubmitted) {
+                        return TextField(
+                          controller: fieldTextEditingController,
+                          style: TextStyle(color: Colors.white),
+                          focusNode: fieldFocusNode,
+                          decoration: InputDecoration(
+                            labelText: 'Search for a company',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
                             ),
-                          );
-                        },
-                      ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(
+                                  color: Color.fromRGBO(182, 109, 164, 1)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(color: Colors.white60),
+                            ),
+                          ),
+                        );
+                      },
+                      optionsViewBuilder: (BuildContext context,
+                          AutocompleteOnSelected<Suggestion> onSelected,
+                          Iterable<Suggestion> options) {
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 4.0,
+                            child: Container(
+                              width: MediaQuery.of(context).size.width - 32,
+                              decoration: BoxDecoration(
+                                color: Color(
+                                    0xFF1e1f20), // Background color of the dropdown
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ListView.builder(
+                                padding: EdgeInsets.all(8.0),
+                                itemCount: options.length,
+                                itemBuilder: (BuildContext context, int index) {
+                                  final Suggestion option =
+                                      options.elementAt(index);
+                                  return GestureDetector(
+                                    onTap: () {
+                                      onSelected(option);
+                                    },
+                                    child: ListTile(
+                                      title: Text(option.description,
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                      subtitle: Text(option.symbol,
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                );
-              },
-            ),
-            SizedBox(height: 20),
-                  ...companies.map((company) {
+                    SizedBox(height: 20),
+                    ...companies.map((company) {
                       return Column(
                         children: [
                           _buildTrendCard(
@@ -329,8 +394,10 @@ class _TrendsPageState extends State<TrendsPage>
                             highPrice: company['highPrice'].toDouble(),
                             lowPrice: company['lowPrice'].toDouble(),
                             volume: company['volume'],
-                            fiftyTwoWeekHigh: company['fiftyTwoWeekHigh'].toDouble(),
-                            fiftyTwoWeekLow: company['fiftyTwoWeekLow'].toDouble(),
+                            fiftyTwoWeekHigh:
+                                company['fiftyTwoWeekHigh'].toDouble(),
+                            fiftyTwoWeekLow:
+                                company['fiftyTwoWeekLow'].toDouble(),
                             averageVolume: company['averageVolume'],
                             currentRatio: company['currentRatio'].toDouble(),
                             salesPerShare: company['salesPerShare'].toDouble(),
@@ -482,10 +549,9 @@ class _TrendsPageState extends State<TrendsPage>
         ),
         Spacer(),
         Container(
-          width: 100,
-          height: 50,
-          child: LineChart(
-            _buildSmallGraph(isProfit),
+          height: 40,
+          child: Image.memory(
+            base64Decode(chartIcons[symbol]!.split(',').last),
           ),
         ),
         Spacer(),
@@ -602,13 +668,8 @@ class _TrendsPageState extends State<TrendsPage>
         SizedBox(height: 20),
         Container(
           height: 200,
-          child: AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return LineChart(
-                _buildLargeGraph(isProfit, _animation.value),
-              );
-            },
+          child: Image.memory(
+            base64Decode(charts[symbol]!.split(',').last),
           ),
         ),
         SizedBox(height: 20),

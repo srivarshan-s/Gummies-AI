@@ -12,13 +12,17 @@ class InsightsPage extends StatefulWidget {
   _InsightsPageState createState() => _InsightsPageState();
 }
 
-class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderStateMixin {
+class _InsightsPageState extends State<InsightsPage>
+    with SingleTickerProviderStateMixin {
   int? _expandedIndex;
   late AnimationController _controller;
   late Animation<double> _animation;
   List<Map<String, String>> stockOpinions = [];
   bool isLoading = true;
   List<String> userWatchlist = [];
+
+  Map<String, String> chartIcons = {};
+  Map<String, String> charts = {};
 
   final List<Map<String, String>> bigCompaniesList = [];
   final List<Map<String, String>> smallCompaniesList = [];
@@ -52,27 +56,28 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
           print('Fetched expanded watchlist: $data');
 
           if (data is Map && data.containsKey('Value')) {
-          final companies = data['Value'] as List<dynamic>;
+            final companies = data['Value'] as List<dynamic>;
 
-          // Iterate through the list of companies
-          for (int i = 0; i < companies.length; i += 2) {
-            final symbol = companies[i]; // Symbol is at index i
-            final companyName = companies[i + 1]; // Company name is at index i+1
+            // Iterate through the list of companies
+            for (int i = 0; i < companies.length; i += 2) {
+              final symbol = companies[i]; // Symbol is at index i
+              final companyName =
+                  companies[i + 1]; // Company name is at index i+1
 
-            setState(() {
-              bigCompaniesList.add({
-                'symbol': symbol.toString(),
-                'companyName': companyName.toString(),
+              setState(() {
+                bigCompaniesList.add({
+                  'symbol': symbol.toString(),
+                  'companyName': companyName.toString(),
+                });
+                smallCompaniesList.add({
+                  'symbol': symbol.toString(),
+                  'companyName': companyName.toString(),
+                });
               });
-              smallCompaniesList.add({
-                'symbol': symbol.toString(),
-                'companyName': companyName.toString(),
-              });
-            });
+            }
+          } else {
+            print('Error: Expected data to be a Map with a "Value" key.');
           }
-        } else {
-          print('Error: Expected data to be a Map with a "Value" key.');
-        }
 
           print('Updated big companies: $bigCompaniesList');
           print('Updated small companies: $smallCompaniesList');
@@ -112,7 +117,8 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
   Future<void> _fetchAndStoreAllOpinions() async {
     List<Map<String, String>> fetchedOpinions = [];
 
-    for (String ticker in bigCompaniesList.map((company) => company['symbol']!)) {
+    for (String ticker
+        in bigCompaniesList.map((company) => company['symbol']!)) {
       if (!mounted) return;
       try {
         final opinion = await fetchStockOpinion(ticker);
@@ -144,6 +150,58 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
         stockOpinions = fetchedOpinions;
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> fetchAllCharts() async {
+    for (String ticker
+        in bigCompaniesList.map((company) => company['symbol']!)) {
+      await _fetchChartIcon(ticker);
+      await _fetchChart(ticker);
+    }
+    for (String ticker
+        in smallCompaniesList.map((company) => company['symbol']!)) {
+      await _fetchChartIcon(ticker);
+      await _fetchChart(ticker);
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> _fetchChart(String ticker) async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://10.0.2.2:3000/generate_chart?ticker=$ticker'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          charts[ticker] =
+              'data:image/png;base64,' + base64Encode(response.bodyBytes);
+        });
+      } else {
+        print('Failed to load chart for $ticker: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching chart for $ticker: $e');
+    }
+  }
+
+  Future<void> _fetchChartIcon(String ticker) async {
+    try {
+      final response = await http.get(
+          Uri.parse('http://10.0.2.2:3000/generate_chart_icon?ticker=$ticker'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          chartIcons[ticker] =
+              'data:image/png;base64,' + base64Encode(response.bodyBytes);
+        });
+      } else {
+        print('Failed to load chart for $ticker: ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching chart for $ticker: $e');
     }
   }
 
@@ -187,7 +245,8 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
         appBar: AppBar(
           backgroundColor: Color(0xFF1e1f20),
           automaticallyImplyLeading: false, // Removes the back arrow
-          titleSpacing: 0, // Removes any extra spacing between the title and the edges
+          titleSpacing:
+              0, // Removes any extra spacing between the title and the edges
           bottom: PreferredSize(
             preferredSize: Size.fromHeight(2.0), // Keeps the TabBar height
             child: TabBar(
@@ -203,13 +262,14 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
             ),
           ),
         ),
-
         body: Container(
           decoration: BoxDecoration(
             color: Color(0xFF131314),
           ),
           child: isLoading
-              ? Center(child: CircularProgressIndicator()) // Show loading indicator while fetching data
+              ? Center(
+                  child:
+                      CircularProgressIndicator()) // Show loading indicator while fetching data
               : TabBarView(
                   children: [
                     _buildCompanyList(bigCompanies: true),
@@ -217,60 +277,61 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
                   ],
                 ),
         ),
-        
       ),
     );
   }
 
   Widget _buildCompanyList({required bool bigCompanies}) {
-  final companies = bigCompanies ? bigCompaniesList : smallCompaniesList;
+    final companies = bigCompanies ? bigCompaniesList : smallCompaniesList;
 
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-      children: [
-        const Text(
-          'Stocks to watch',
-          style: TextStyle(
-            color: Color.fromRGBO(182, 109, 164, 1),
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          const Text(
+            'Stocks to watch',
+            style: TextStyle(
+              color: Color.fromRGBO(182, 109, 164, 1),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        ...companies.map((company) {
-          final opinionData = stockOpinions.firstWhere(
-            (opinion) => opinion['ticker'] == company['symbol'],
-            orElse: () => {'Summary': 'No summary available', 'Opinion': 'N/A'},
-          );
+          const SizedBox(height: 20),
+          ...companies.map((company) {
+            final opinionData = stockOpinions.firstWhere(
+              (opinion) => opinion['ticker'] == company['symbol'],
+              orElse: () =>
+                  {'Summary': 'No summary available', 'Opinion': 'N/A'},
+            );
 
-          return Column(
-            children: [
-              _buildInsightCard(
-                context,
-                symbol: company['symbol']!,
-                companyName: company['symbol']!,
-                isProfit: opinionData['Opinion'] == 'Strong Buy' || opinionData['Opinion'] == 'Buy',
-                consensus: opinionData['Opinion']!,
-                analysis: opinionData['Summary']!,
-              ),
-              const SizedBox(height: 20),
-            ],
-          );
-        }).toList(),
-      ],
-    ),
-  );
-}
+            return Column(
+              children: [
+                _buildInsightCard(
+                  context,
+                  symbol: company['symbol']!,
+                  companyName: company['symbol']!,
+                  isProfit: opinionData['Opinion'] == 'Strong Buy' ||
+                      opinionData['Opinion'] == 'Buy',
+                  consensus: opinionData['Opinion']!,
+                  analysis: opinionData['Summary']!,
+                ),
+                const SizedBox(height: 20),
+              ],
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
 
   Widget _buildInsightCard(
-      BuildContext context, {
-        required String symbol,
-        required String companyName,
-        required bool isProfit,
-        required String consensus,
-        required String analysis,
-      }) {
+    BuildContext context, {
+    required String symbol,
+    required String companyName,
+    required bool isProfit,
+    required String consensus,
+    required String analysis,
+  }) {
     bool isExpanded = _expandedIndex == symbol.hashCode;
 
     return GestureDetector(
@@ -294,18 +355,19 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
           borderRadius: BorderRadius.circular(30),
         ),
         child: isExpanded
-            ? _buildExpandedContent(companyName, symbol, isProfit, consensus, analysis)
+            ? _buildExpandedContent(
+                companyName, symbol, isProfit, consensus, analysis)
             : _buildCollapsedContent(symbol, companyName, isProfit, consensus),
       ),
     );
   }
 
   Widget _buildCollapsedContent(
-      String symbol,
-      String companyName,
-      bool isProfit,
-      String consensus,
-      ) {
+    String symbol,
+    String companyName,
+    bool isProfit,
+    String consensus,
+  ) {
     return Row(
       children: [
         Column(
@@ -331,10 +393,9 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
         ),
         Spacer(),
         Container(
-          width: 100,
-          height: 50,
-          child: LineChart(
-            _buildSmallGraph(isProfit),
+          height: 40,
+          child: Image.memory(
+            base64Decode(chartIcons[symbol]!.split(',').last),
           ),
         ),
         Spacer(),
@@ -356,12 +417,12 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
   }
 
   Widget _buildExpandedContent(
-      String companyName,
-      String symbol,
-      bool isProfit,
-      String consensus,
-      String analysis,
-      ) {
+    String companyName,
+    String symbol,
+    bool isProfit,
+    String consensus,
+    String analysis,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -407,13 +468,11 @@ class _InsightsPageState extends State<InsightsPage> with SingleTickerProviderSt
         SizedBox(height: 20),
         Container(
           height: 200,
-          child: AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return LineChart(
-                _buildLargeGraph(isProfit, _animation.value),
-              );
-            },
+          child: Container(
+            height: 200,
+            child: Image.memory(
+              base64Decode(charts[symbol]!.split(',').last),
+            ),
           ),
         ),
         SizedBox(height: 20),

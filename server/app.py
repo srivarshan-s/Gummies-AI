@@ -16,7 +16,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-finn_api_key = 'cmr19q1r01ql2lmtdgi0cmr19q1r01ql2lmtdgig'
+finn_api_key = 'cqsqsb1r01qsc7l9vj0gcqsqsb1r01qsc7l9vj10'
 finnhub_client = finnhub.Client(api_key=finn_api_key)
 
 alpha_api_key = 'U7NN2DLYMXQNXBZW'
@@ -147,15 +147,12 @@ def get_company_data():
         # Initialize a query dictionary
         query = {}
 
-        # Search by ID if provided
         if company_id:
             query['_id'] = ObjectId(company_id)
 
-        # Search by name if provided
         if company_name:
             query['name'] = company_name
 
-        # Fetch the company data from MongoDB
         company_data = company_form_collection.find_one(query)
 
         if company_data:
@@ -200,6 +197,43 @@ def remove_from_watchlist():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/edit_user', methods=['POST'])
+def edit_user():
+    try:
+        # Get the JSON data from the request
+        data = request.json
+        user_id = data.get('userId')
+        new_display_name = data.get('userData', {}).get('name')
+        new_email = data.get('userData', {}).get('email')
+
+        print(data)
+        if not user_id:
+            return jsonify({'error': 'Missing userId parameter'}), 400
+
+        update_fields = {}
+        if new_display_name:
+            update_fields['displayName'] = new_display_name
+        if new_email:
+            update_fields['email'] = new_email
+
+        if not update_fields:
+            return jsonify({'error': 'No fields to update provided'}), 400
+
+        # Update the user document in the collection
+        result = user_collection.update_one(
+            {'userId': user_id},
+            {'$set': update_fields}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({'error': 'User not found'}), 404
+
+        return jsonify({'message': 'User updated successfully'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @ app.route('/store_user', methods=['POST'])
@@ -333,9 +367,21 @@ def generate_chart_icon():
         return jsonify({'error': 'Missing ticker parameter'}), 400
 
     try:
-        url = f"https://api.polygon.io/v2/aggs/ticker/{ticker}/range/1/day/2023-01-09/2023-02-10?adjusted=true&sort=asc&apiKey=H9JsuyGoZo4VJzwe9dLmUgvErf6f9ff_"
+        to_date = datetime.datetime.today().strftime('%Y-%m-%d')
+
+        # Get the date one month ago
+        from_date = (datetime.datetime.today() -
+                     datetime.timedelta(days=30)).strftime('%Y-%m-%d')
+
+        # Construct the URL with dynamic dates
+        url = f"https://api.polygon.io/v2/aggs/ticker/{ticker}/range/1/day/{from_date}/{to_date}?adjusted=true&sort=asc&apiKey=pXmH80NXQjAduR22FxXVpEh4jWk5pWVc"
+
         response = requests.get(url)
         data = response.json()
+
+        stock_quote = finnhub_client.quote(ticker)
+
+        change_percent = stock_quote['dp']
 
         if 'results' not in data:
             return jsonify({'error': 'No data found for the given ticker'}), 404
@@ -350,15 +396,14 @@ def generate_chart_icon():
             dates.append(date)
             closing_prices.append(result['c'])
 
-        # Determine line color based on price movement
-        line_color = 'green' if closing_prices[-1] > closing_prices[0] else 'red'
-
         # Step 3: Plot the graph
         fig, ax = plt.subplots(figsize=(10, 5))
 
         # Remove background
         fig.patch.set_alpha(0)
         ax.patch.set_alpha(0)
+
+        line_color = 'green' if change_percent >= 0 else 'red'
 
         # Plot the graph
         ax.plot(dates, closing_prices, color=line_color,
@@ -378,19 +423,14 @@ def generate_chart_icon():
         ax.spines['left'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
 
-        file_path = os.path.join(output_dir, f'{ticker}.png')
-        plt.savefig(file_path, format='png', bbox_inches='tight',
+        # Save the plot to a BytesIO object
+        img = BytesIO()
+        plt.savefig(img, format='png', bbox_inches='tight',
                     pad_inches=0, transparent=True)
+        img.seek(0)
         plt.close()
 
-        return jsonify({"image_path": f'charts/{ticker}.png'})
-        # img = BytesIO()
-        # plt.savefig(img, format='png', bbox_inches='tight',
-        #             pad_inches=0, transparent=True)
-        # img.seek(0)
-        # plt.close()
-
-        # return send_file(img, mimetype='image/png')
+        return send_file(img, mimetype='image/png')
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -405,9 +445,20 @@ def generate_chart():
 
     try:
         # Step 1: Fetch the data
-        url = f"https://api.polygon.io/v2/aggs/ticker/{ticker}/range/1/day/2023-01-09/2023-02-10?adjusted=true&sort=asc&apiKey=pXmH80NXQjAduR22FxXVpEh4jWk5pWVc"
+        to_date = datetime.datetime.today().strftime('%Y-%m-%d')
+
+        # Get the date one month ago
+        from_date = (datetime.datetime.today() -
+                     datetime.timedelta(days=30)).strftime('%Y-%m-%d')
+
+        # Construct the URL with dynamic dates
+        url = f"https://api.polygon.io/v2/aggs/ticker/{ticker}/range/1/day/{from_date}/{to_date}?adjusted=true&sort=asc&apiKey=pXmH80NXQjAduR22FxXVpEh4jWk5pWVc"
         response = requests.get(url)
         data = response.json()
+
+        stock_quote = finnhub_client.quote(ticker)
+
+        change_percent = stock_quote['dp']
 
         if 'results' not in data:
             return jsonify({'error': 'No data found for the given ticker'}), 404
@@ -417,7 +468,6 @@ def generate_chart():
         closing_prices = []
 
         for result in data['results']:
-            # Convert the timestamp to a date
             date = datetime.datetime.fromtimestamp(
                 result['t'] / 1000).strftime('%Y-%m-%d')
             dates.append(date)
@@ -438,8 +488,24 @@ def generate_chart():
         fig.patch.set_alpha(0)  # Set figure background to transparent
         ax.patch.set_alpha(0)  # Set axis background to transparent
 
-        ax.plot(dates, closing_prices, color='green',
-                linestyle='solid', linewidth=15)
+        line_color = 'green' if change_percent >= 0 else 'red'
+
+        ax.plot(dates, closing_prices, color=line_color,
+                linestyle='solid', linewidth=3)
+
+        ax.grid(True, which='both', color='gray',
+                linestyle='--', linewidth=0.2)
+
+        # Display only half of the x-axis labels
+        ax.set_xticks(dates[::2])
+        ax.set_xticklabels(dates[::2], rotation=45, ha="right")
+
+        ax.spines['bottom'].set_color('white')
+        ax.spines['left'].set_color('white')
+        ax.xaxis.label.set_color('white')
+        ax.yaxis.label.set_color('white')
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
 
         # Save the plot to a BytesIO object
         img = BytesIO()
