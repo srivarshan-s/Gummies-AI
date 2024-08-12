@@ -97,8 +97,9 @@ def get_recommendations(profile: str):
         try:
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
-
+                "gemini-1.5-flash",
                 generation_config={"response_mime_type": "application/json"},
+                system_instruction=" ",
             )
             response = model.generate_content(prompt_recommendation)
             num_hits += 1
@@ -334,5 +335,5 @@ class Summarizer:
 
 
 if __name__ == "__main__":
-    # uvicorn.run(app, host="0.0.0.0", port=8080)
-    uvicorn.run(app, host="localhost", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
+    # uvicorn.run(app, host="localhost", port=8080)
