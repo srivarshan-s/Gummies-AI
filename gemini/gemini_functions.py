@@ -77,9 +77,11 @@ prompt_projection = collection_gemini.find(
     {"model": "projection"})[0]["prompt"]
 prompt_recommendation = collection_gemini.find(
     {"model": "recommendation"})[0]["prompt"]
-prompt_expandWatchlist = collection_gemini.find({"model": "expandWatchlist"})[0][
-    "prompt"
-]
+prompt_expandWatchlist = collection_gemini.find(
+    {"model": "expandWatchlist"})[0]["prompt"]
+prompt_summstartup = collection_gemini.find(
+    {"model": "summstartup"})[0]["prompt"]
+
 
 # Close the MongoDB connection
 client.close()
@@ -157,6 +159,34 @@ def autocorrect(text: str):
             response = model.generate_content(text)
             num_hits += 1
             return json.loads(response.text)
+        except InvalidArgument as e:
+            logging.warning(
+                f"Model cannot generate with API key {API_KEY}: {e}")
+            num_hits -= 1
+            if num_hits <= 0:
+                return {"text": "ERROR"}
+            
+
+@app.get('/summarizestartup')
+def summarizeStartup(jsonDetails):
+    num_hits = len(GEMINI_API_KEYS)
+    while GEMINI_API_KEYS:
+        API_KEY = secrets.choice(GEMINI_API_KEYS)
+        try:
+            # Summarise the given comapny's aim and vision. Return it as a json with the format: {'Company name': str, 'Year founded': str, 'Headquarters': str. 'Contact Information': str, 'About': str}
+            genai.configure(api_key=API_KEY)
+            model = genai.GenerativeModel(
+                "gemini-1.5-flash",
+                system_instruction=prompt_summstartup,
+                generation_config={"response_mime_type": "application/json"},
+            )
+
+            jsonDetails = json.dumps(jsonDetails)
+            response = model.generate_content(jsonDetails)
+            num_hits += 1
+
+            return json.loads(response.text)
+
         except InvalidArgument as e:
             logging.warning(
                 f"Model cannot generate with API key {API_KEY}: {e}")
