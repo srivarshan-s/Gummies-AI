@@ -80,7 +80,7 @@ prompt_recommendation = collection_gemini.find(
 prompt_expandWatchlist = collection_gemini.find(
     {"model": "expandWatchlist"})[0]["prompt"]
 prompt_summstartup = collection_gemini.find(
-    {"model": "summstartup"})[0]["prompt"]
+    {"model": "summariseStartup"})[0]["prompt"]
 
 
 # Close the MongoDB connection
