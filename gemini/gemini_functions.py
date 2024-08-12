@@ -165,9 +165,9 @@ def autocorrect(text: str):
             num_hits -= 1
             if num_hits <= 0:
                 return {"text": "ERROR"}
-            
 
-@app.get('/summarizestartup')
+
+@app.post('/summarizestartup')
 def summarizeStartup(jsonDetails):
     num_hits = len(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
@@ -181,8 +181,13 @@ def summarizeStartup(jsonDetails):
                 generation_config={"response_mime_type": "application/json"},
             )
 
-            jsonDetails = json.dumps(jsonDetails)
-            response = model.generate_content(jsonDetails)
+            # jsonDetails = json.dumps(jsonDetails)
+            # response = model.generate_content(jsonDetails)
+            # num_hits += 1
+
+            json_details_str = json.dumps(
+                [detail.dict() for detail in jsonDetails])
+            response = model.generate_content(json_details_str)
             num_hits += 1
 
             return json.loads(response.text)
