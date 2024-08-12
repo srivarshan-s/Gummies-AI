@@ -97,8 +97,7 @@ def get_recommendations(profile: str):
         try:
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
-                "gemini-1.5-flash",
-                system_instruction="",
+
                 generation_config={"response_mime_type": "application/json"},
             )
             response = model.generate_content(prompt_recommendation)
@@ -115,7 +114,7 @@ def get_recommendations(profile: str):
 @app.get("/get_projections")
 def get_projections(object_string: str):
     global prompt_projection
-    values = eval(object_string["results"])
+    values = json.loads(object_string["results"])
     values = list(map(lambda x: str(x["v"]), values))
     values = "[" + ",".join(values) + "]"
 
@@ -128,7 +127,6 @@ def get_projections(object_string: str):
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
                 "gemini-1.5-flash",
-                system_instruction="",
                 generation_config={"response_mime_type": "application/json"},
             )
             response = model.generate_content(prompt_projection)
@@ -336,4 +334,5 @@ class Summarizer:
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    # uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="localhost", port=8080)
