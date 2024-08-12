@@ -14,7 +14,7 @@ import requests
 import uvicorn
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from google.api_core.exceptions import InvalidArgument  # Exception Handling
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -168,12 +168,13 @@ def autocorrect(text: str):
 
 
 @app.post('/summarizestartup')
-def summarizeStartup(jsonDetails):
+def summarizeStartup(jsonDetails: str = Body(...)):
     num_hits = len(GEMINI_API_KEYS)
     while GEMINI_API_KEYS:
         API_KEY = secrets.choice(GEMINI_API_KEYS)
         try:
-            # Summarise the given comapny's aim and vision. Return it as a json with the format: {'Company name': str, 'Year founded': str, 'Headquarters': str. 'Contact Information': str, 'About': str}
+            # Summarize the given company's aim and vision. Return it as a json with the format:
+            # {'Company name': str, 'Year founded': str, 'Headquarters': str, 'Contact Information': str, 'About': str}
             genai.configure(api_key=API_KEY)
             model = genai.GenerativeModel(
                 "gemini-1.5-flash",
@@ -181,13 +182,7 @@ def summarizeStartup(jsonDetails):
                 generation_config={"response_mime_type": "application/json"},
             )
 
-            # jsonDetails = json.dumps(jsonDetails)
-            # response = model.generate_content(jsonDetails)
-            # num_hits += 1
-
-            json_details_str = json.dumps(
-                [detail.dict() for detail in jsonDetails])
-            response = model.generate_content(json_details_str)
+            response = model.generate_content(jsonDetails)
             num_hits += 1
 
             return json.loads(response.text)
